@@ -27,7 +27,7 @@ public class DataInitializer {
                 .orElseGet(() -> roleRepository.save(new Role(null, "ADMIN")));
 
         // Tạo tài khoản admin mặc định nếu chưa tồn tại
-        if (!userRepository.existsByUsername("admin")) {
+        if (!userRepository.existsByUsername("admin1")) {
             User admin = new User();
             admin.setUsername("admin1");
             admin.setPassword(passwordEncoder.encode("1")); // nhớ mã hóa
