@@ -15,4 +15,10 @@ public class UserService {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
+
+    public List<User> getAllCoaches() {
+        return userRepository.findAll().stream()
+                .filter(user -> "Coach".equals(user.getRole().getRoleName()))
+                .toList();
+    }
 }

@@ -9,17 +9,22 @@ public class HomeController {
 
     @GetMapping("/")
     public String getRoot() {
-        return "homepage/index"; // Hiển thị homepage cho người dùng chưa đăng nhập
+        return "homepage/index";
     }
 
     @GetMapping("/homepage")
     public String getHomePage() {
-        return "homepage/index"; // Homepage sau khi user đăng nhập
+        return "homepage/index";
+    }
+
+    @GetMapping("/user-homepage")
+    public String getUserHomePage() {
+        return "homepage/user-homepage";
     }
 
     @GetMapping("/dashboard")
     public String getDashboard() {
-        return "dashboard/dashboard"; // Dashboard cho admin
+        return "dashboard/dashboard";
     }
 
     @GetMapping("/login")
@@ -32,10 +37,5 @@ public class HomeController {
     public String getRegister(Model model) {
         model.addAttribute("user", new com.example.kingpool.entity.User());
         return "auth/register";
-    }
-
-    @GetMapping("/logout")
-    public String getLogout() {
-        return "redirect:/";
     }
 }
