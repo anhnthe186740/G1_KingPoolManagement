@@ -34,7 +34,7 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
         session.setAttribute("name", user.getName());
         session.setAttribute("role", user.getRole().getRoleName());
 
-        String redirectUrl = "ADMIN".equals(user.getRole().getRoleName()) ? "/dashboard" : "/homepage";
+        String redirectUrl = "Admin".equals(user.getRole().getRoleName()) ? "/dashboard" : "/homepage";
         response.sendRedirect(redirectUrl);
     }
 }
