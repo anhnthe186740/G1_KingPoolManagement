@@ -1,47 +1,41 @@
 package com.example.kingpool.controller;
 
-import com.example.kingpool.entity.User;
-import com.example.kingpool.service.AuthService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-@RequiredArgsConstructor
 public class HomeController {
 
-    private final AuthService authService;
-
     @GetMapping("/")
-    public String redirectToLogin() {
-        return "redirect:/login";
-    }
-
-    @GetMapping("/login")
-    public String getLoginPage(Model model) {
-        model.addAttribute("user", new User());
-        return "auth/login";
-    }
-
-    @GetMapping("/register")
-    public String register(Model model) {
-        model.addAttribute("user", new User());
-        return "auth/register";
+    public String getRoot() {
+        return "homepage/index"; // Hiển thị homepage cho người dùng chưa đăng nhập
     }
 
     @GetMapping("/homepage")
     public String getHomePage() {
-        return "homepage/index";
+        return "homepage/index"; // Homepage sau khi user đăng nhập
     }
 
     @GetMapping("/dashboard")
     public String getDashboard() {
-        return "dashboard/dashboard";
+        return "dashboard/dashboard"; // Dashboard cho admin
+    }
+
+    @GetMapping("/login")
+    public String getLogin(Model model) {
+        model.addAttribute("user", new com.example.kingpool.entity.User());
+        return "auth/login";
+    }
+
+    @GetMapping("/register")
+    public String getRegister(Model model) {
+        model.addAttribute("user", new com.example.kingpool.entity.User());
+        return "auth/register";
     }
 
     @GetMapping("/logout")
-    public String logout() {
-        return "redirect:/login?logout";
+    public String getLogout() {
+        return "redirect:/";
     }
 }
