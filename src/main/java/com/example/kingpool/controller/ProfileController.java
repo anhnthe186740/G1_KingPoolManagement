@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
 @Controller
 @RequestMapping("/profile")
 public class ProfileController {
@@ -46,6 +50,7 @@ public class ProfileController {
 
         User user = authService.getUserFromAuthentication(authentication);
         logger.info("Editing profile for user: {}", user.getUsername());
+        logger.info("User dateOfBirth: {}", user.getDateOfBirth());
         model.addAttribute("user", user);
         return "profile/edit";
     }
@@ -55,6 +60,7 @@ public class ProfileController {
             @ModelAttribute("user") User updatedUser,
             BindingResult result,
             @RequestParam("imageFile") MultipartFile imageFile,
+            @RequestParam(value = "dateOfBirth", required = false) String dateOfBirthStr,
             Authentication authentication,
             RedirectAttributes redirectAttributes,
             Model model) {
@@ -80,6 +86,19 @@ public class ProfileController {
             }
         }
 
+        // Kiểm tra và chuyển đổi dateOfBirth từ String thành LocalDate
+        if (dateOfBirthStr != null && !dateOfBirthStr.isEmpty()) {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                LocalDate dateOfBirth = LocalDate.parse(dateOfBirthStr, formatter);
+                updatedUser.setDateOfBirth(dateOfBirth);
+            } catch (DateTimeParseException e) {
+                result.rejectValue("dateOfBirth", "error.dateOfBirth", "Ngày sinh không hợp lệ");
+            }
+        } else {
+            updatedUser.setDateOfBirth(null); // Nếu không nhập, đặt là null
+        }
+
         if (result.hasErrors()) {
             logger.warn("Validation errors: {}", result.getAllErrors());
             model.addAttribute("user", updatedUser);
@@ -98,11 +117,38 @@ public class ProfileController {
             authService.updateUserProfile(currentUser, updatedUser, imageFile);
             redirectAttributes.addFlashAttribute("success", "Cập nhật hồ sơ thành công!");
             logger.info("Profile updated successfully for user: {}", currentUser.getUsername());
-            return "redirect:/profile"; // Chuyển hướng về /profile để hiển thị thông báo
+            return "redirect:/profile";
         } catch (Exception e) {
             logger.error("Error updating profile: {}", e.getMessage());
             model.addAttribute("user", updatedUser);
             redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/profile/edit";
+        }
+    }
+
+    @PostMapping("/change-password")
+    public String changePassword(
+            @RequestParam("currentPassword") String currentPassword,
+            @RequestParam("newPassword") String newPassword,
+            @RequestParam("confirmNewPassword") String confirmNewPassword,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        try {
+            User currentUser = authService.getUserFromAuthentication(authentication);
+
+            // Kiểm tra mật khẩu hiện tại và cập nhật mật khẩu mới
+            authService.changePassword(currentUser, currentPassword, newPassword, confirmNewPassword);
+
+            redirectAttributes.addFlashAttribute("success", "Thay đổi mật khẩu thành công!");
+            logger.info("Password changed successfully for user: {}", currentUser.getUsername());
+            return "redirect:/profile/edit";
+        } catch (Exception e) {
+            logger.error("Error changing password: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("passwordError", e.getMessage());
             return "redirect:/profile/edit";
         }
     }

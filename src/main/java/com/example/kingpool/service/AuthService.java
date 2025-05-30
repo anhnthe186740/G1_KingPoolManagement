@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -200,5 +200,30 @@ public class AuthService {
         User savedUser = userRepository.save(currentUser);
         logger.info("Profile saved successfully for user: {}", savedUser.getUsername());
         return savedUser;
+    }
+
+    public void changePassword(User user, String currentPassword, String newPassword, String confirmNewPassword) {
+        // Kiểm tra mật khẩu mới và xác nhận mật khẩu mới có khớp không
+        if (!newPassword.equals(confirmNewPassword)) {
+            throw new RuntimeException("Mật khẩu mới và xác nhận mật khẩu mới không khớp");
+        }
+
+        // Kiểm tra độ dài mật khẩu mới (tối thiểu 8 ký tự)
+        if (newPassword.length() < 8) {
+            throw new RuntimeException("Mật khẩu mới phải có ít nhất 8 ký tự");
+        }
+
+        // Xác minh mật khẩu hiện tại
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), currentPassword)
+            );
+        } catch (AuthenticationException e) {
+            throw new RuntimeException("Mật khẩu hiện tại không đúng");
+        }
+
+        // Mã hóa và cập nhật mật khẩu mới
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 }
