@@ -21,13 +21,13 @@ public class User {
     @Column(name = "user_id")
     private Integer userId;
 
-    @NotNull
-    @Size(max = 100)
+    @NotBlank(message = "Tên không được để trống")
+    @Size(min = 1, max = 100, message = "Tên phải từ 1 đến 100 ký tự")
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @NotNull
-    @Size(max = 50)
+    @NotBlank(message = "Tên đăng nhập không được để trống")
+    @Size(max = 50, message = "Tên đăng nhập tối đa 50 ký tự")
     @Column(name = "username", nullable = false, unique = true, length = 50)
     private String username;
 
@@ -35,11 +35,13 @@ public class User {
     @Column(name = "password", length = 255)
     private String password;
 
-    @Size(max = 100)
+    @NotBlank(message = "Email không được để trống")
+    @Email(message = "Email không hợp lệ")
+    @Size(max = 100, message = "Email tối đa 100 ký tự")
     @Column(name = "email", unique = true, length = 100)
     private String email;
 
-    @Size(max = 15)
+    @Size(max = 15, message = "Số điện thoại tối đa 15 ký tự")
     @Column(name = "phone_number", length = 15)
     private String phoneNumber;
 
@@ -56,6 +58,7 @@ public class User {
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
+    @Size(max = 200, message = "Địa chỉ tối đa 200 ký tự")
     @Column(name = "address", length = 200)
     private String address;
 

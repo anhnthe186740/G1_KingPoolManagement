@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa hồ sơ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #e0eafc, #cfdef3);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            width: 100%;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .main-container {
+            width: 100%;
+            min-height: 100vh;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .content-wrapper {
+            max-width: 1400px;
+            width: 100%;
+        }
+        .widget-card {
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+        .widget-card:hover {
+            transform: translateY(-5px);
+        }
+        .card-header {
+            background: linear-gradient(90deg, #0984e3, #74b9ff);
+            color: white;
+            font-weight: 500;
+            border-top-left-radius: 15px !important;
+            border-top-right-radius: 15px !important;
+        }
+        .card-body {
+            padding: 20px;
+        }
+        .profile-image {
+            max-width: 120px;
+            border-radius: 50%;
+            border: 3px solid #74b9ff;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .profile-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(116, 185, 255, 0.5);
+        }
+        .list-group-item {
+            border: none;
+            padding: 10px 0;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #34495e;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 1px solid #dfe6e9;
+            padding: 10px;
+            transition: border-color 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #74b9ff;
+            box-shadow: 0 0 0 0.2rem rgba(116, 185, 255, 0.25);
+        }
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #0984e3, #74b9ff);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-weight: 500;
+            transition: background 0.3s ease, transform 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #74b9ff, #0984e3);
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background-color: #b2bec3;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #95a5a6;
+            transform: translateY(-2px);
+        }
+        .loading-spinner {
+            display: none;
+            margin-left: 10px;
+        }
+        @media (max-width: 992px) {
+            .main-container {
+                padding: 10px;
+            }
+            .col-lg-4, .col-lg-8 {
+                margin-bottom: 20px;
+            }
+            .col-md-6 {
+                margin-bottom: 15px;
+            }
+        }
+        @media (max-width: 576px) {
+            .btn-primary, .btn-secondary {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="content-wrapper">
+            <div class="row gy-4 gy-lg-0">
+                <!-- Sidebar -->
+                <div class="col-12 col-lg-4 col-xl-3">
+                    <div class="row gy-4">
+                        <div class="col-12">
+                            <div class="card widget-card border-light shadow-sm">
+                                <div class="card-header text-bg-primary">Welcome, <span th:text="${user.name}"></span></div>
+                                <div class="card-body">
+                                    <div class="text-center mb-3">
+                                        <img th:if="${user.image != null}" th:src="@{'/uploads/' + ${user.image}}" class="profile-image" alt="Ảnh đại diện" id="profileImage">
+                                        <img th:if="${user.image == null}" src="/assets/img/default-profile.jpg" class="profile-image" alt="Ảnh đại diện mặc định" id="profileImage">
+                                    </div>
+                                    <h5 class="text-center mb-1" th:text="${user.name ?: 'Chưa cung cấp'}"></h5>
+                                    <p class="text-center text-secondary mb-4" th:text="${user.role.roleName ?: 'Chưa cung cấp'}"></p>
+                                    <div class="d-grid gap-2 m-0">
+                                        <button class="btn btn-outline-primary" type="button">Cập nhật</button>
+                                        <a th:href="@{/homepage}" class="btn btn-outline-secondary">Trang chủ</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="card widget-card border-light shadow-sm">
+                                <div class="card-header text-bg-primary">Thông tin cơ bản</div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush mb-0">
+                                        <li class="list-group-item">
+                                            <h6 class="mb-1">
+                                                <span class="bi bi-geo-alt-fill me-2"></span>
+                                                Địa chỉ
+                                            </h6>
+                                            <span th:text="${user.address ?: 'Chưa cung cấp'}"></span>
+                                        </li>
+                                        <li class="list-group-item">
+                                            <h6 class="mb-1">
+                                                <span class="bi bi-person-fill me-2"></span>
+                                                Vai trò
+                                            </h6>
+                                            <span th:text="${user.role.roleName ?: 'Chưa cung cấp'}"></span>
+                                        </li>
+                                        <li class="list-group-item">
+                                            <h6 class="mb-1">
+                                                <span class="bi bi-clock-fill me-2"></span>
+                                                Ngày tạo
+                                            </h6>
+                                            <span th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm') ?: 'Chưa cung cấp'}"></span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Main Content -->
+                <div class="col-12 col-lg-8 col-xl-9">
+                    <div class="card widget-card border-light shadow-sm">
+                        <div class="card-body p-4">
+                            <h5 class="mb-3">Chỉnh sửa thông tin</h5>
+                            <!-- Flash messages -->
+                            <div th:if="${success}" class="alert alert-success d-none" th:text="${success}" id="successMessage"></div>
+                            <div th:if="${error}" class="alert alert-danger d-none" th:text="${error}" id="errorMessage"></div>
+                            <form th:action="@{/profile/edit}" th:object="${user}" method="post" enctype="multipart/form-data" id="editProfileForm">
+                                <div class="row gy-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Họ và tên</label>
+                                        <input type="text" class="form-control" th:field="*{name}" required>
+                                        <div th:if="${#fields.hasErrors('name')}" class="error-message" th:errors="*{name}"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" th:field="*{email}" required>
+                                        <div th:if="${#fields.hasErrors('email')}" class="error-message" th:errors="*{email}"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Số điện thoại</label>
+                                        <input type="text" class="form-control" th:field="*{phoneNumber}">
+                                        <div th:if="${#fields.hasErrors('phoneNumber')}" class="error-message" th:errors="*{phoneNumber}"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Giới tính</label>
+                                        <select class="form-select" th:field="*{gender}">
+                                            <option value="">-- Chọn --</option>
+                                            <option value="M">Nam</option>
+                                            <option value="F">Nữ</option>
+                                            <option value="Other">Khác</option>
+                                        </select>
+                                        <div th:if="${#fields.hasErrors('gender')}" class="error-message" th:errors="*{gender}"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Ngày sinh</label>
+                                        <input type="date" class="form-control" th:field="*{dateOfBirth}">
+                                        <div th:if="${#fields.hasErrors('dateOfBirth')}" class="error-message" th:errors="*{dateOfBirth}"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Địa chỉ</label>
+                                        <input type="text" class="form-control" th:field="*{address}">
+                                        <div th:if="${#fields.hasErrors('address')}" class="error-message" th:errors="*{address}"></div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label">Ảnh đại diện</label>
+                                        <div class="row gy-2">
+                                            <div class="col-12">
+                                                <img th:if="${user.image != null}" th:src="@{'/uploads/' + ${user.image}}" class="profile-image img-fluid" alt="Ảnh đại diện" id="previewImage">
+                                                <img th:if="${user.image == null}" src="/assets/img/default-profile.jpg" class="profile-image img-fluid" alt="Ảnh đại diện mặc định" id="previewImage">
+                                            </div>
+                                            <div class="col-12">
+                                                <input type="file" class="form-control" name="imageFile" id="imageFile" accept="image/*">
+                                                <div th:if="${#fields.hasErrors('image')}" class="error-message" th:errors="*{image}"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                                            <span>Lưu thay đổi</span>
+                                            <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+                                        </button>
+                                        <a th:href="@{/profile}" class="btn btn-secondary ms-2">Quay lại</a>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        // Xem trước ảnh khi người dùng chọn file
+        document.getElementById('imageFile').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const previewImage = document.getElementById('previewImage');
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Hiển thị hiệu ứng loading khi submit form
+        document.getElementById('editProfileForm').addEventListener('submit', function() {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.querySelector('span:first-child').textContent = 'Đang lưu...';
+            submitBtn.querySelector('.loading-spinner').style.display = 'inline-block';
+            submitBtn.disabled = true;
+        });
+
+        // Hiển thị thông báo Toastr khi cập nhật thành công hoặc lỗi
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        if (successMessage && successMessage.textContent) {
+            toastr.success(successMessage.textContent);
+        }
+        if (errorMessage && errorMessage.textContent) {
+            toastr.error(errorMessage.textContent);
+        }
+    </script>
+</body>
+</html>
