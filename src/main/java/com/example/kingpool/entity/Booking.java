@@ -23,7 +23,7 @@ public class Booking {
     private User user;
 
     @Column(name = "schedule_id", nullable = false)
-    private Integer scheduleId; // Thay vì @ManyToOne Schedule
+    private Integer scheduleId;
 
     @Column(name = "booking_type", nullable = false)
     private String bookingType;

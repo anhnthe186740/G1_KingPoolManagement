@@ -110,21 +110,38 @@
     <div class="container container-main">
         <h2 class="text-center mb-4 slide-in">Xác Nhận Đặt Vé</h2>
         <div th:if="${success}" class="alert alert-success text-center slide-in" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-danger text-center slide-in" th:text="${error}"></div>
 
         <!-- Ticket -->
-        <div class="ticket slide-in" th:with="formattedPrice=${#numbers.formatDecimal(booking.totalPrice, 0, 'COMMA', 0, 'POINT')}">
+        <div class="ticket slide-in" 
+             th:with="formattedPrice=${booking != null && booking.totalPrice != null} ? 
+                     ${#numbers.formatDecimal(booking.totalPrice, 0, 'COMMA', 0, 'POINT')} : '0'">
             <div class="ticket-header">
                 <h4>Vé Bơi KingPool</h4>
             </div>
             <div class="ticket-body">
                 <div class="ticket-info">
-                    <p><strong>Mã đặt vé:</strong> <span th:text="${booking.bookingId}"></span></p>
-                    <p><strong>Người đặt:</strong> <span th:text="${booking.user.name}"></span></p>
-                    <p><strong>Khung giờ:</strong> <span th:text="${#temporals.format(schedule.start_time, 'dd/MM/yyyy HH:mm')} + ' - ' + ${#temporals.format(schedule.end_time, 'dd/MM/yyyy HH:mm')}"></span></p>
-                    <p><strong>Số vé người lớn:</strong> <span th:text="${booking.quantityAdult}"></span></p>
-                    <p><strong>Số vé trẻ em:</strong> <span th:text="${booking.quantityChild}"></span></p>
-                    <p><strong>Tổng giá:</strong> <span th:text="${formattedPrice} + ' VNĐ'"></span></p>
-                    <p><strong>Trạng thái:</strong> <span th:text="${booking.status}"></span></p>
+                    <p><strong>Mã đặt vé:</strong> 
+                       <span th:text="${booking?.bookingId} ?: 'Không xác định'"></span></p>
+                    <p><strong>Người đặt:</strong> 
+                       <span th:text="${booking?.user?.name} ?: 'Không xác định'"></span></p>
+                    <p><strong>Khung giờ:</strong> 
+                       <span th:if="${schedule != null && schedule.start_time != null && schedule.end_time != null}"
+                             th:text="${#temporals.format(schedule.start_time, 'dd/MM/yyyy HH:mm')} + ' - ' + 
+                                     ${#temporals.format(schedule.end_time, 'dd/MM/yyyy HH:mm')}">
+                           Không xác định
+                       </span>
+                       <span th:if="${schedule == null || schedule.start_time == null || schedule.end_time == null}">
+                           Không xác định
+                       </span></p>
+                    <p><strong>Số vé người lớn:</strong> 
+                       <span th:text="${booking?.quantityAdult} ?: '0'"></span></p>
+                    <p><strong>Số vé trẻ em:</strong> 
+                       <span th:text="${booking?.quantityChild} ?: '0'"></span></p>
+                    <p><strong>Tổng giá:</strong> 
+                       <span th:text="${formattedPrice} + ' VNĐ'"></span></p>
+                    <p><strong>Trạng thái:</strong> 
+                       <span th:text="${booking?.status} ?: 'Không xác định'"></span></p>
                 </div>
             </div>
         </div>

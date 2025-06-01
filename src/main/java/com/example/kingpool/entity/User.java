@@ -19,7 +19,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    private Integer userId;
+    private Long userId; // Changed from Integer to Long
 
     @NotBlank(message = "Tên không được để trống")
     @Size(min = 1, max = 100, message = "Tên phải từ 1 đến 100 ký tự")

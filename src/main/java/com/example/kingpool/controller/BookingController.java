@@ -2,10 +2,12 @@ package com.example.kingpool.controller;
 
 import com.example.kingpool.entity.Booking;
 import com.example.kingpool.entity.User;
+import com.example.kingpool.service.AuthService;
 import com.example.kingpool.service.BookingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -31,6 +33,9 @@ public class BookingController {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private AuthService authService;
 
     @GetMapping
     public String showBookingPage(Model model) {
@@ -60,27 +65,89 @@ public class BookingController {
     }
 
     @GetMapping("/confirmation/{bookingId}")
-    public String showConfirmationPage(@PathVariable("bookingId") Integer bookingId, Model model) {
+    public String showConfirmationPage(@PathVariable("bookingId") Integer bookingId, Model model, 
+            Authentication authentication, RedirectAttributes redirectAttributes) {
         logger.debug("Showing confirmation for bookingId={}", bookingId);
-        String bookingSql = "SELECT b.booking_id, b.user_id, b.schedule_id, b.quantity_adult, b.quantity_child, b.total_price, b.status, u.name " +
+
+        // Check if user is authenticated
+        if (authentication == null || !authentication.isAuthenticated()) {
+            logger.warn("Unauthenticated access to confirmation for bookingId={}", bookingId);
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để xem xác nhận đặt vé.");
+            return "redirect:/login";
+        }
+
+        // Get current user
+        User currentUser;
+        try {
+            currentUser = authService.getUserFromAuthentication(authentication);
+        } catch (Exception e) {
+            logger.error("Error retrieving user from authentication: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Không thể xác định người dùng.");
+            return "redirect:/booking";
+        }
+
+        // Query booking data
+        String bookingSql = "SELECT b.booking_id, b.user_id, b.schedule_id, b.quantity_adult, b.quantity_child, " +
+                           "b.total_price, b.status, u.name " +
                            "FROM Booking b JOIN Users u ON b.user_id = u.user_id WHERE b.booking_id = ?";
-        Map<String, Object> bookingData = jdbcTemplate.queryForMap(bookingSql, bookingId);
+        Map<String, Object> bookingData;
+        try {
+            bookingData = jdbcTemplate.queryForMap(bookingSql, bookingId);
+            logger.debug("Booking data retrieved: {}", bookingData);
+        } catch (EmptyResultDataAccessException e) {
+            logger.error("Booking with ID {} not found", bookingId);
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy thông tin đặt vé.");
+            return "redirect:/booking";
+        } catch (Exception e) {
+            logger.error("Error querying booking with ID {}: {}", bookingId, e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Lỗi hệ thống khi truy xuất thông tin đặt vé.");
+            return "redirect:/booking";
+        }
 
+        // Validate user permission
+        Long bookingUserId = ((Number) bookingData.get("user_id")).longValue();
+        if (!bookingUserId.equals(currentUser.getUserId())) {
+            logger.warn("User {} attempted to access booking {} belonging to another user", 
+                        currentUser.getUsername(), bookingId);
+            redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem thông tin đặt vé này.");
+            return "redirect:/booking";
+        }
+
+        // Query schedule data
         String scheduleSql = "SELECT start_time, end_time FROM Schedules WHERE schedule_id = ?";
-        Map<String, Object> schedule = jdbcTemplate.queryForMap(scheduleSql, bookingData.get("schedule_id"));
+        Map<String, Object> schedule;
+        try {
+            schedule = jdbcTemplate.queryForMap(scheduleSql, bookingData.get("schedule_id"));
+            logger.debug("Schedule data retrieved: {}", schedule);
+        } catch (EmptyResultDataAccessException e) {
+            logger.error("Schedule with ID {} not found", bookingData.get("schedule_id"));
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy thông tin khung giờ.");
+            return "redirect:/booking";
+        } catch (Exception e) {
+            logger.error("Error querying schedule for bookingId {}: {}", bookingId, e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Lỗi hệ thống khi truy xuất thông tin khung giờ.");
+            return "redirect:/booking";
+        }
 
+        // Populate Booking entity
         Booking booking = new Booking();
-        booking.setBookingId((Integer) bookingData.get("booking_id"));
-        booking.setScheduleId((Integer) bookingData.get("schedule_id"));
-        booking.setQuantityAdult((Integer) bookingData.get("quantity_adult"));
-        booking.setQuantityChild((Integer) bookingData.get("quantity_child"));
-        booking.setTotalPrice(((Number) bookingData.get("total_price")).doubleValue());
+        booking.setBookingId(((Number) bookingData.get("booking_id")).intValue());
+        booking.setScheduleId(((Number) bookingData.get("schedule_id")).intValue());
+        booking.setQuantityAdult(bookingData.get("quantity_adult") != null ? 
+                                ((Number) bookingData.get("quantity_adult")).intValue() : 0);
+        booking.setQuantityChild(bookingData.get("quantity_child") != null ? 
+                                ((Number) bookingData.get("quantity_child")).intValue() : 0);
+        booking.setTotalPrice(bookingData.get("total_price") != null ? 
+                             ((Number) bookingData.get("total_price")).doubleValue() : 0.0);
         booking.setStatus((String) bookingData.get("status"));
 
+        // Populate User entity
         User user = new User();
         user.setName((String) bookingData.get("name"));
+        user.setUserId(bookingUserId);
         booking.setUser(user);
 
+        // Add to model
         model.addAttribute("booking", booking);
         model.addAttribute("schedule", schedule);
         return "booking/confirmation";

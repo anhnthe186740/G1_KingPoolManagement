@@ -115,11 +115,11 @@ public class BookingService {
                      "FROM Booking b " +
                      "JOIN Schedules s ON b.schedule_id = s.schedule_id " +
                      "WHERE b.user_id = ? " +
-                     "AND b.status != 'Cancelled' " + // Lọc bỏ các bản ghi đã hủy
+                     "AND b.status != 'Cancelled' " +
                      "ORDER BY b.booking_date DESC";
         
         try {
-            List<Map<String, Object>> bookings = jdbcTemplate.queryForList(sql, new Object[]{user.getUserId()});
+            List<Map<String, Object>> bookings = jdbcTemplate.queryForList(sql, user.getUserId());
             logger.info("Found {} bookings for user: {}", bookings.size(), user.getUsername());
             return bookings;
         } catch (Exception e) {
@@ -155,11 +155,9 @@ public class BookingService {
             throw new RuntimeException("Vé này không thể hủy (trạng thái: " + booking.getStatus() + ")");
         }
 
-        // Xóa bản ghi thay vì cập nhật trạng thái
         bookingRepository.delete(booking);
         logger.info("Booking {} deleted by user {}", bookingId, user.getUsername());
 
-        // Cập nhật trạng thái Schedule nếu cần
         Integer bookedTickets = bookingRepository.countBookedTickets(booking.getScheduleId());
         bookedTickets = bookedTickets != null ? bookedTickets : 0;
 
