@@ -96,11 +96,10 @@
     </style>
 </head>
 <body>
-    <!-- Header Start -->
-
+   <!-- Header Start -->
     <div class="container-fluid nav-bar sticky-top px-4 py-2 py-lg-0">
         <nav class="navbar navbar-expand-lg navbar-light">
-            <a href="/" class="navbar-brand p-0">
+            <a href="/dashboard" class="navbar-brand p-0">
                 <h1 class="display-6 text-dark"><i class="fas fa-swimmer text-primary me-3"></i>KING POOL</h1>
                 <img th:src="@{/img/KingPool.jpg}" alt="King Pool Logo">
             </a>
@@ -109,12 +108,11 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarCollapse">
                 <div class="navbar-nav mx-auto py-0">
-                    <a href="/" class="nav-item nav-link">Home</a>
-                    <a href="/about" class="nav-item nav-link">About</a>
-                    <a href="/service" class="nav-item nav-link">Service</a>
-                    <a href="/contact" class="nav-item nav-link">Contact</a>
-                    <a th:if="${role != 'Admin'}" href="/schedule" class="nav-item nav-link">Lịch bơi</a>
-                    <a th:if="${role == 'Admin'}" href="/dashboard" class="nav-item nav-link active">Quản trị</a>
+                    <a href="/dashboard" class="nav-item nav-link active">Dashboard</a>
+                    <a href="/dashboard/users" class="nav-item nav-link">Xem người dùng</a>
+                    <a href="/dashboard/coaches" class="nav-item nav-link">Xem coach</a>
+                    <a href="/dashboard/schedules" class="nav-item nav-link">Xem schedule</a>
+                    <a href="/dashboard/feedbacks" class="nav-item nav-link">Xem feedback</a>
                 </div>
                 <div class="team-icon d-none d-xl-flex justify-content-center me-3">
                     <a class="btn btn-square btn-light rounded-circle mx-1" href="#"><i class="fab fa-facebook-f"></i></a>
