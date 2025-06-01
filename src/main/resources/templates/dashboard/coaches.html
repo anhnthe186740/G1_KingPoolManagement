@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="utf-8">
-    <title>KING POOL - Trang chủ người dùng</title>
+    <title>KING POOL - Quản lý huấn luyện viên</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="" name="keywords">
     <meta content="" name="description">
@@ -50,12 +50,63 @@
             font-weight: 500;
             font-size: 1.1rem;
         }
-        .success {
-            color: green;
-            font-size: 1rem;
-            margin-top: 5px;
-            display: block;
-            text-align: center;
+        .management-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            margin-top: 40px;
+        }
+        .management-section table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .management-section th, .management-section td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .management-section th {
+            background: linear-gradient(90deg, #007bff, #00c4ff);
+            color: white;
+        }
+        .btn-add, .btn-edit, .btn-view-schedule, .btn-delete {
+            padding: 5px 10px;
+            font-size: 0.9rem;
+            margin-right: 5px;
+        }
+        .btn-add {
+            background-color: #28a745;
+            border-color: #28a745;
+            margin-bottom: 20px;
+        }
+        .btn-add:hover {
+            background-color: #218838;
+            border-color: #218838;
+        }
+        .btn-edit {
+            background-color: #ffc107;
+            border-color: #ffc107;
+        }
+        .btn-edit:hover {
+            background-color: #e0a800;
+            border-color: #e0a800;
+        }
+        .btn-view-schedule {
+            background-color: #17a2b8;
+            border-color: #17a2b8;
+        }
+        .btn-view-schedule:hover {
+            background-color: #138496;
+            border-color: #138496;
+        }
+        .btn-delete {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .btn-delete:hover {
+            background-color: #c82333;
+            border-color: #c82333;
         }
     </style>
 </head>
@@ -79,7 +130,7 @@
                     <a href="/service" class="nav-item nav-link">Service</a>
                     <a href="/contact" class="nav-item nav-link">Contact</a>
                     <a th:if="${role != 'Admin'}" href="/schedule" class="nav-item nav-link">Lịch bơi</a>
-                    <a th:if="${role == 'Admin'}" href="/dashboard" class="nav-item nav-link">Quản trị</a>
+                    <a th:if="${role == 'Admin'}" href="/dashboard" class="nav-item nav-link active">Quản trị</a>
                 </div>
                 <div class="team-icon d-none d-xl-flex justify-content-center me-3">
                     <a class="btn btn-square btn-light rounded-circle mx-1" href="#"><i class="fab fa-facebook-f"></i></a>
@@ -98,12 +149,46 @@
     <!-- Body Start -->
     <div class="main-content">
         <div class="container">
-            <h1 class="text-center mb-5 header-title">Trang chủ người dùng</h1>
-            <p class="text-center">Chào mừng bạn đến với trang chủ người dùng của King Pool!</p>
+            <h1 class="text-center mb-5 header-title">Quản lý huấn luyện viên</h1>
 
-            <!-- Hiển thị thông báo thành công -->
-            <div th:if="${successMessage}" class="success">
-                <span th:text="${successMessage}"></span>
+            <!-- Coach Management Section -->
+            <div class="management-section">
+                <!-- Hiển thị thông báo nếu có -->
+                <div th:if="${message}" class="alert alert-info" th:text="${message}"></div>
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+                <a th:href="@{/dashboard/coach/add}" class="btn btn-add">Thêm huấn luyện viên</a>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Họ và tên</th>
+                            <th>Email</th>
+                            <th>Số điện thoại</th>
+                            <th>Ngày tuyển dụng</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="coach : ${coaches}">
+                            <td th:text="${coach.name}"></td>
+                            <td th:text="${coach.email}"></td>
+                            <td th:text="${coach.phoneNumber != null ? coach.phoneNumber : 'N/A'}"></td>
+                            <td th:text="${coach.hireDate != null ? #temporals.format(coach.hireDate, 'dd/MM/yyyy') : 'N/A'}"></td>
+                            <td th:text="${coach.status}"></td>
+                            <td>
+                                <a th:href="@{/dashboard/coach/edit/{id}(id=${coach.userId})}" class="btn btn-edit">Sửa</a>
+                                <a th:href="@{/dashboard/coach/{id}(id=${coach.userId})}" class="btn btn-view-schedule">Xem chi tiết</a>
+                                <form th:action="@{/dashboard/coach/delete/{id}(id=${coach.userId})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-delete">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(coaches)}">
+                            <td colspan="6" class="text-center">Chưa có huấn luyện viên nào.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -206,17 +291,5 @@
     <script th:src="@{/lib/lightbox/js/lightbox.min.js}"></script>
     <script th:src="@{/lib/owlcarousel/owl.carousel.min.js}"></script>
     <script th:src="@{/js/main.js}"></script>
-
-    <!-- Hiển thị thông báo thành công -->
-    <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            const successMessage = /*[[${successMessage}]]*/ null;
-            if (successMessage) {
-                if (confirm(successMessage)) {
-                    window.location.href = '/user-homepage';
-                }
-            }
-        });
-    </script>
 </body>
 </html>

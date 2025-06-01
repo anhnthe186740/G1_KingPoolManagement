@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="utf-8">
-    <title>KING POOL - Trang chủ người dùng</title>
+    <title>KING POOL - Sửa lịch hoạt động</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="" name="keywords">
     <meta content="" name="description">
@@ -50,18 +50,53 @@
             font-weight: 500;
             font-size: 1.1rem;
         }
-        .success {
-            color: green;
+        .form-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            margin-top: 40px;
+        }
+        .form-section form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .form-section .form-group {
+            margin-bottom: 20px;
+        }
+        .form-section label {
+            font-weight: 600;
+            color: #333;
+        }
+        .form-section input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
             font-size: 1rem;
+        }
+        .form-section .error {
+            color: red;
+            font-size: 0.9rem;
             margin-top: 5px;
             display: block;
-            text-align: center;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
         }
     </style>
 </head>
 <body>
     <!-- Header Start -->
-    
 
     <div class="container-fluid nav-bar sticky-top px-4 py-2 py-lg-0">
         <nav class="navbar navbar-expand-lg navbar-light">
@@ -79,7 +114,7 @@
                     <a href="/service" class="nav-item nav-link">Service</a>
                     <a href="/contact" class="nav-item nav-link">Contact</a>
                     <a th:if="${role != 'Admin'}" href="/schedule" class="nav-item nav-link">Lịch bơi</a>
-                    <a th:if="${role == 'Admin'}" href="/dashboard" class="nav-item nav-link">Quản trị</a>
+                    <a th:if="${role == 'Admin'}" href="/dashboard" class="nav-item nav-link active">Quản trị</a>
                 </div>
                 <div class="team-icon d-none d-xl-flex justify-content-center me-3">
                     <a class="btn btn-square btn-light rounded-circle mx-1" href="#"><i class="fab fa-facebook-f"></i></a>
@@ -98,12 +133,54 @@
     <!-- Body Start -->
     <div class="main-content">
         <div class="container">
-            <h1 class="text-center mb-5 header-title">Trang chủ người dùng</h1>
-            <p class="text-center">Chào mừng bạn đến với trang chủ người dùng của King Pool!</p>
+            <h1 class="text-center mb-5 header-title">Sửa lịch hoạt động</h1>
 
-            <!-- Hiển thị thông báo thành công -->
-            <div th:if="${successMessage}" class="success">
-                <span th:text="${successMessage}"></span>
+            <!-- Form Section -->
+            <div class="form-section">
+                <!-- Hiển thị thông báo lỗi nếu có -->
+                <div th:if="${error != null}" class="error">
+                    <span th:text="${error}"></span>
+                </div>
+
+                <form th:action="@{/dashboard/schedule/edit/{id}(id=${schedule.scheduleId})}" method="post">
+                    <div class="form-group">
+                        <label for="startTime">Thời gian bắt đầu (yyyy-MM-dd HH:mm):</label>
+                        <input type="datetime-local" id="startTime" name="startTime" class="form-control"
+                               th:value="${#temporals.format(schedule.startTime, 'yyyy-MM-dd''T''HH:mm')}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="endTime">Thời gian kết thúc (yyyy-MM-dd HH:mm):</label>
+                        <input type="datetime-local" id="endTime" name="endTime" class="form-control"
+                               th:value="${#temporals.format(schedule.endTime, 'yyyy-MM-dd''T''HH:mm')}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="maxTickets">Số vé tối đa:</label>
+                        <input type="number" id="maxTickets" name="maxTickets" class="form-control"
+                               th:value="${schedule.maxTickets}" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adultPrice">Giá vé người lớn (VNĐ):</label>
+                        <input type="number" id="adultPrice" name="adultPrice" class="form-control"
+                               th:value="${schedule.adultPrice}" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="childPrice">Giá vé trẻ em (VNĐ):</label>
+                        <input type="number" id="childPrice" name="childPrice" class="form-control"
+                               th:value="${schedule.childPrice}" step="0.01" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Trạng thái:</label>
+                        <select id="status" name="status" class="form-control">
+                            <option value="Open" th:selected="${schedule.status == 'Open'}">Open</option>
+                            <option value="Closed" th:selected="${schedule.status == 'Closed'}">Closed</option>
+                            <option value="SoldOut" th:selected="${schedule.status == 'SoldOut'}">Sold Out</option>
+                        </select>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                        <a th:href="@{/dashboard/schedules}" class="btn btn-primary">Quay lại</a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -206,17 +283,6 @@
     <script th:src="@{/lib/lightbox/js/lightbox.min.js}"></script>
     <script th:src="@{/lib/owlcarousel/owl.carousel.min.js}"></script>
     <script th:src="@{/js/main.js}"></script>
-
-    <!-- Hiển thị thông báo thành công -->
-    <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            const successMessage = /*[[${successMessage}]]*/ null;
-            if (successMessage) {
-                if (confirm(successMessage)) {
-                    window.location.href = '/user-homepage';
-                }
-            }
-        });
-    </script>
+    <!-- Footer End -->
 </body>
 </html>

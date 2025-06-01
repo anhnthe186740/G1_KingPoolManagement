@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -38,12 +38,13 @@ public class SecurityConfig {
                 .requestMatchers("/", "/homepage", "/login", "/register", "/api/auth/register", "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                 .requestMatchers("/api/auth/profile").authenticated()
-                .requestMatchers("/dashboard", "/admin/**").hasRole("Admin")
+                .requestMatchers("/dashboard/**").hasRole("Admin") // Đảm bảo quyền Admin được yêu cầu
                 .requestMatchers("/user-homepage").authenticated()
                 .anyRequest().authenticated())
             .formLogin(form -> form
                 .loginPage("/login")
                 .successHandler(customSuccessHandler)
+                .failureUrl("/login?error=true")
                 .permitAll())
             .oauth2Login(oauth2 -> oauth2
                 .loginPage("/login")
@@ -54,7 +55,7 @@ public class SecurityConfig {
                 .tokenValiditySeconds(7 * 24 * 60 * 60))
             .logout(logout -> logout
                 .logoutUrl("/logout")
-                .logoutSuccessUrl("/") // Chuyển hướng về homepage sau khi đăng xuất
+                .logoutSuccessUrl("/?logout=true")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
                 .permitAll());
@@ -67,11 +68,18 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
-            throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(customUserDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
-        return new ProviderManager(authProvider);
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(customUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
     }
 }

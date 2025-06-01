@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="utf-8">
-    <title>KING POOL - Trang chủ người dùng</title>
+    <title>KING POOL - Chỉnh sửa huấn luyện viên</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="" name="keywords">
     <meta content="" name="description">
@@ -50,12 +50,48 @@
             font-weight: 500;
             font-size: 1.1rem;
         }
-        .success {
-            color: green;
+        .form-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            margin-top: 40px;
+        }
+        .form-section form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .form-section .form-group {
+            margin-bottom: 20px;
+        }
+        .form-section label {
+            font-weight: 600;
+            color: #333;
+        }
+        .form-section input, .form-section select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
             font-size: 1rem;
+        }
+        .form-section .error {
+            color: red;
+            font-size: 0.9rem;
             margin-top: 5px;
             display: block;
-            text-align: center;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
         }
     </style>
 </head>
@@ -79,7 +115,7 @@
                     <a href="/service" class="nav-item nav-link">Service</a>
                     <a href="/contact" class="nav-item nav-link">Contact</a>
                     <a th:if="${role != 'Admin'}" href="/schedule" class="nav-item nav-link">Lịch bơi</a>
-                    <a th:if="${role == 'Admin'}" href="/dashboard" class="nav-item nav-link">Quản trị</a>
+                    <a th:if="${role == 'Admin'}" href="/dashboard" class="nav-item nav-link active">Quản trị</a>
                 </div>
                 <div class="team-icon d-none d-xl-flex justify-content-center me-3">
                     <a class="btn btn-square btn-light rounded-circle mx-1" href="#"><i class="fab fa-facebook-f"></i></a>
@@ -98,12 +134,52 @@
     <!-- Body Start -->
     <div class="main-content">
         <div class="container">
-            <h1 class="text-center mb-5 header-title">Trang chủ người dùng</h1>
-            <p class="text-center">Chào mừng bạn đến với trang chủ người dùng của King Pool!</p>
+            <h1 class="text-center mb-5 header-title">Chỉnh sửa huấn luyện viên</h1>
 
-            <!-- Hiển thị thông báo thành công -->
-            <div th:if="${successMessage}" class="success">
-                <span th:text="${successMessage}"></span>
+            <!-- Form Section -->
+            <div class="form-section">
+                <!-- Hiển thị thông báo lỗi nếu có -->
+                <div th:if="${error != null}" class="error">
+                    <span th:text="${error}"></span>
+                </div>
+
+                <form th:action="@{/dashboard/coach/edit/{id}(id=${coach.userId})}" method="post">
+                    <div class="form-group">
+                        <label for="name">Họ và tên:</label>
+                        <input type="text" id="name" name="name" class="form-control" th:value="${coach.name}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="username">Tên đăng nhập:</label>
+                        <input type="text" id="username" name="username" class="form-control" th:value="${coach.username}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Mật khẩu (để trống nếu không thay đổi):</label>
+                        <input type="password" id="password" name="password" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" name="email" class="form-control" th:value="${coach.email}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneNumber">Số điện thoại:</label>
+                        <input type="text" id="phoneNumber" name="phoneNumber" class="form-control" th:value="${coach.phoneNumber}">
+                    </div>
+                    <div class="form-group">
+                        <label for="hireDate">Ngày tuyển dụng (yyyy-MM-dd):</label>
+                        <input type="date" id="hireDate" name="hireDate" class="form-control" th:value="${coach.hireDate != null ? #temporals.format(coach.hireDate, 'yyyy-MM-dd') : ''}">
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Trạng thái:</label>
+                        <select id="status" name="status" class="form-control" required>
+                            <option value="Active" th:selected="${coach.status == 'Active'}">Active</option>
+                            <option value="Inactive" th:selected="${coach.status == 'Inactive'}">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Cập nhật</button>
+                        <a th:href="@{/dashboard/coaches}" class="btn btn-primary">Quay lại</a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -206,17 +282,5 @@
     <script th:src="@{/lib/lightbox/js/lightbox.min.js}"></script>
     <script th:src="@{/lib/owlcarousel/owl.carousel.min.js}"></script>
     <script th:src="@{/js/main.js}"></script>
-
-    <!-- Hiển thị thông báo thành công -->
-    <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            const successMessage = /*[[${successMessage}]]*/ null;
-            if (successMessage) {
-                if (confirm(successMessage)) {
-                    window.location.href = '/user-homepage';
-                }
-            }
-        });
-    </script>
 </body>
 </html>

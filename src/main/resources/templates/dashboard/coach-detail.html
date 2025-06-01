@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="utf-8">
-    <title>KING POOL - Trang chủ người dùng</title>
+    <title>KING POOL - Chi tiết huấn luyện viên</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="" name="keywords">
     <meta content="" name="description">
@@ -50,12 +50,52 @@
             font-weight: 500;
             font-size: 1.1rem;
         }
-        .success {
-            color: green;
-            font-size: 1rem;
-            margin-top: 5px;
-            display: block;
-            text-align: center;
+        .detail-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            margin-top: 40px;
+        }
+        .detail-section .detail-item {
+            margin-bottom: 20px;
+        }
+        .detail-section .detail-item label {
+            font-weight: 600;
+            color: #333;
+            display: inline-block;
+            width: 150px;
+        }
+        .detail-section .detail-item span {
+            color: #666;
+        }
+        .schedule-table {
+            margin-top: 30px;
+        }
+        .schedule-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .schedule-table th, .schedule-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .schedule-table th {
+            background: linear-gradient(90deg, #007bff, #00c4ff);
+            color: white;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
         }
     </style>
 </head>
@@ -79,7 +119,7 @@
                     <a href="/service" class="nav-item nav-link">Service</a>
                     <a href="/contact" class="nav-item nav-link">Contact</a>
                     <a th:if="${role != 'Admin'}" href="/schedule" class="nav-item nav-link">Lịch bơi</a>
-                    <a th:if="${role == 'Admin'}" href="/dashboard" class="nav-item nav-link">Quản trị</a>
+                    <a th:if="${role == 'Admin'}" href="/dashboard" class="nav-item nav-link active">Quản trị</a>
                 </div>
                 <div class="team-icon d-none d-xl-flex justify-content-center me-3">
                     <a class="btn btn-square btn-light rounded-circle mx-1" href="#"><i class="fab fa-facebook-f"></i></a>
@@ -98,12 +138,66 @@
     <!-- Body Start -->
     <div class="main-content">
         <div class="container">
-            <h1 class="text-center mb-5 header-title">Trang chủ người dùng</h1>
-            <p class="text-center">Chào mừng bạn đến với trang chủ người dùng của King Pool!</p>
+            <h1 class="text-center mb-5 header-title">Chi tiết huấn luyện viên</h1>
 
-            <!-- Hiển thị thông báo thành công -->
-            <div th:if="${successMessage}" class="success">
-                <span th:text="${successMessage}"></span>
+            <!-- Detail Section -->
+            <div class="detail-section">
+                <div class="detail-item">
+                    <label>Họ và tên:</label>
+                    <span th:text="${coach.name}"></span>
+                </div>
+                <div class="detail-item">
+                    <label>Email:</label>
+                    <span th:text="${coach.email}"></span>
+                </div>
+                <div class="detail-item">
+                    <label>Số điện thoại:</label>
+                    <span th:text="${coach.phoneNumber != null ? coach.phoneNumber : 'N/A'}"></span>
+                </div>
+                <div class="detail-item">
+                    <label>Địa chỉ:</label>
+                    <span th:text="${coach.address != null ? coach.address : 'N/A'}"></span>
+                </div>
+                <div class="detail-item">
+                    <label>Giới tính:</label>
+                    <span th:text="${coach.gender != null ? coach.gender : 'N/A'}"></span>
+                </div>
+                <div class="detail-item">
+                    <label>Ngày sinh:</label>
+                    <span th:text="${coach.dateOfBirth != null ? #temporals.format(coach.dateOfBirth, 'dd/MM/yyyy') : 'N/A'}"></span>
+                </div>
+                <div class="detail-item">
+                    <label>Trạng thái:</label>
+                    <span th:text="${coach.status}"></span>
+                </div>
+
+                <!-- Schedule Table -->
+                <div class="schedule-table">
+                    <h3>Thời gian dạy</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Thời gian bắt đầu</th>
+                                <th>Thời gian kết thúc</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="schedule : ${schedules}">
+                                <td th:text="${#temporals.format(schedule.startTime, 'dd/MM/yyyy HH:mm')}"></td>
+                                <td th:text="${#temporals.format(schedule.endTime, 'dd/MM/yyyy HH:mm')}"></td>
+                                <td th:text="${schedule.status}"></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(schedules)}">
+                                <td colspan="3" class="text-center">Chưa có lịch dạy.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="text-center">
+                    <a th:href="@{/dashboard/coaches}" class="btn btn-primary">Quay lại</a>
+                </div>
             </div>
         </div>
     </div>
@@ -206,17 +300,6 @@
     <script th:src="@{/lib/lightbox/js/lightbox.min.js}"></script>
     <script th:src="@{/lib/owlcarousel/owl.carousel.min.js}"></script>
     <script th:src="@{/js/main.js}"></script>
-
-    <!-- Hiển thị thông báo thành công -->
-    <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            const successMessage = /*[[${successMessage}]]*/ null;
-            if (successMessage) {
-                if (confirm(successMessage)) {
-                    window.location.href = '/user-homepage';
-                }
-            }
-        });
-    </script>
+    <!-- Footer End -->
 </body>
 </html>

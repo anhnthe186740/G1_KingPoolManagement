@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="utf-8">
-    <title>KING POOL - Trang chủ người dùng</title>
+    <title>KING POOL - Quản lý lịch hoạt động</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="" name="keywords">
     <meta content="" name="description">
@@ -50,18 +50,49 @@
             font-weight: 500;
             font-size: 1.1rem;
         }
-        .success {
-            color: green;
-            font-size: 1rem;
-            margin-top: 5px;
-            display: block;
-            text-align: center;
+        .table-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            margin-top: 40px;
+        }
+        .table-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table-container th, .table-container td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .table-container th {
+            background: linear-gradient(90deg, #007bff, #00c4ff);
+            color: white;
+        }
+        .btn-action {
+            padding: 5px 10px;
+            font-size: 0.9rem;
+            margin-right: 5px;
+        }
+        .btn-add {
+            background-color: #28a745;
+            border-color: #28a745;
+            border-radius: 25px;
+            padding: 10px 20px;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+        .btn-add:hover {
+            background-color: #218838;
+            border-color: #218838;
         }
     </style>
 </head>
 <body>
     <!-- Header Start -->
-    
 
     <div class="container-fluid nav-bar sticky-top px-4 py-2 py-lg-0">
         <nav class="navbar navbar-expand-lg navbar-light">
@@ -79,7 +110,7 @@
                     <a href="/service" class="nav-item nav-link">Service</a>
                     <a href="/contact" class="nav-item nav-link">Contact</a>
                     <a th:if="${role != 'Admin'}" href="/schedule" class="nav-item nav-link">Lịch bơi</a>
-                    <a th:if="${role == 'Admin'}" href="/dashboard" class="nav-item nav-link">Quản trị</a>
+                    <a th:if="${role == 'Admin'}" href="/dashboard" class="nav-item nav-link active">Quản trị</a>
                 </div>
                 <div class="team-icon d-none d-xl-flex justify-content-center me-3">
                     <a class="btn btn-square btn-light rounded-circle mx-1" href="#"><i class="fab fa-facebook-f"></i></a>
@@ -98,12 +129,44 @@
     <!-- Body Start -->
     <div class="main-content">
         <div class="container">
-            <h1 class="text-center mb-5 header-title">Trang chủ người dùng</h1>
-            <p class="text-center">Chào mừng bạn đến với trang chủ người dùng của King Pool!</p>
+            <h1 class="text-center mb-5 header-title">Quản lý lịch hoạt động</h1>
 
-            <!-- Hiển thị thông báo thành công -->
-            <div th:if="${successMessage}" class="success">
-                <span th:text="${successMessage}"></span>
+            <!-- Table Container -->
+            <div class="table-container">
+                <a th:href="@{/dashboard/schedule/add}" class="btn-add">Thêm lịch hoạt động</a>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Thời gian bắt đầu</th>
+                            <th>Thời gian kết thúc</th>
+                            <th>Số vé tối đa</th>
+                            <th>Giá vé người lớn</th>
+                            <th>Giá vé trẻ em</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="schedule : ${schedules}">
+                            <td th:text="${#temporals.format(schedule.startTime, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td th:text="${#temporals.format(schedule.endTime, 'dd/MM/yyyy HH:mm')}"></td>
+                            <td th:text="${schedule.maxTickets}"></td>
+                            <td th:text="${schedule.adultPrice}"></td>
+                            <td th:text="${schedule.childPrice}"></td>
+                            <td th:text="${schedule.status}"></td>
+                            <td>
+                                <a th:href="@{/dashboard/schedule/{id}(id=${schedule.scheduleId})}" class="btn btn-primary btn-action">Xem chi tiết</a>
+                                <a th:href="@{/dashboard/schedule/edit/{id}(id=${schedule.scheduleId})}" class="btn btn-primary btn-action">Sửa</a>
+                                <form th:action="@{/dashboard/schedule/delete/{id}(id=${schedule.scheduleId})}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-action">Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(schedules)}">
+                            <td colspan="7" class="text-center">Chưa có lịch hoạt động nào.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -206,17 +269,6 @@
     <script th:src="@{/lib/lightbox/js/lightbox.min.js}"></script>
     <script th:src="@{/lib/owlcarousel/owl.carousel.min.js}"></script>
     <script th:src="@{/js/main.js}"></script>
-
-    <!-- Hiển thị thông báo thành công -->
-    <script th:inline="javascript">
-        document.addEventListener('DOMContentLoaded', function() {
-            const successMessage = /*[[${successMessage}]]*/ null;
-            if (successMessage) {
-                if (confirm(successMessage)) {
-                    window.location.href = '/user-homepage';
-                }
-            }
-        });
-    </script>
+    <!-- Footer End -->
 </body>
 </html>

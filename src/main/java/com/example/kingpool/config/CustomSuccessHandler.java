@@ -26,16 +26,21 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
             throws IOException, ServletException {
 
         String username = authentication.getName();
+        System.out.println("Authentication success for user: " + username);
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> {
+                    System.out.println("User not found: " + username);
+                    return new RuntimeException("User not found");
+                });
 
         HttpSession session = request.getSession();
         session.setAttribute("username", user.getUsername());
         session.setAttribute("name", user.getName());
         session.setAttribute("role", user.getRole().getRoleName());
 
-        // Chuyển hướng: Admin vào /dashboard, còn lại (Customer, Coach) vào /user-homepage
-        String redirectUrl = "Admin".equals(user.getRole().getRoleName()) ? "/dashboard" : "/user-homepage";
+        // Redirect: Admin vào /dashboard, còn lại (Customer, Coach) vào /user-homepage
+        String redirectUrl = user.getRole().getRoleName().equals("Admin") ? "/dashboard" : "/user-homepage";
+        System.out.println("Redirecting user " + username + " to " + redirectUrl);
         response.sendRedirect(redirectUrl);
     }
 }

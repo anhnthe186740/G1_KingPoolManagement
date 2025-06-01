@@ -17,7 +17,8 @@ public class CoachController {
     @GetMapping("/coaches")
     @PreAuthorize("hasRole('Admin')")
     public String listCoaches(Model model) {
-        model.addAttribute("coaches", userService.getAllCoaches());
+        // Sử dụng getUsersByRoleId(2) thay vì getAllCoaches()
+        model.addAttribute("coaches", userService.getUsersByRoleId(2));
         return "admin/coach-list";
     }
 }
