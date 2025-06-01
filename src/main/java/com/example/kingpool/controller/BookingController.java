@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -31,14 +32,13 @@ public class BookingController {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    // Hiển thị trang đặt vé
     @GetMapping
     public String showBookingPage(Model model) {
+        logger.debug("Accessing booking page");
         model.addAttribute("schedules", bookingService.getAvailableSchedules());
         return "booking/book-ticket";
     }
 
-    // Xử lý đặt vé
     @PostMapping("/book")
     public String bookTicket(
             @RequestParam("scheduleId") Integer scheduleId,
@@ -46,6 +46,8 @@ public class BookingController {
             @RequestParam("quantityChild") Integer quantityChild,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
+        logger.debug("Booking ticket: scheduleId={}, quantityAdult={}, quantityChild={}", 
+                     scheduleId, quantityAdult, quantityChild);
         try {
             Booking booking = bookingService.bookTicket(authentication, scheduleId, quantityAdult, quantityChild);
             redirectAttributes.addFlashAttribute("success", "Đặt vé thành công! Mã đặt vé: " + booking.getBookingId());
@@ -57,19 +59,16 @@ public class BookingController {
         }
     }
 
-    // Hiển thị trang xác nhận
     @GetMapping("/confirmation/{bookingId}")
     public String showConfirmationPage(@PathVariable("bookingId") Integer bookingId, Model model) {
-        // Lấy thông tin Booking từ bảng Booking
+        logger.debug("Showing confirmation for bookingId={}", bookingId);
         String bookingSql = "SELECT b.booking_id, b.user_id, b.schedule_id, b.quantity_adult, b.quantity_child, b.total_price, b.status, u.name " +
                            "FROM Booking b JOIN Users u ON b.user_id = u.user_id WHERE b.booking_id = ?";
         Map<String, Object> bookingData = jdbcTemplate.queryForMap(bookingSql, bookingId);
 
-        // Lấy thông tin khung giờ từ bảng Schedules
         String scheduleSql = "SELECT start_time, end_time FROM Schedules WHERE schedule_id = ?";
         Map<String, Object> schedule = jdbcTemplate.queryForMap(scheduleSql, bookingData.get("schedule_id"));
 
-        // Tạo đối tượng Booking để truyền vào model
         Booking booking = new Booking();
         booking.setBookingId((Integer) bookingData.get("booking_id"));
         booking.setScheduleId((Integer) bookingData.get("schedule_id"));
@@ -78,7 +77,6 @@ public class BookingController {
         booking.setTotalPrice(((Number) bookingData.get("total_price")).doubleValue());
         booking.setStatus((String) bookingData.get("status"));
 
-        // Tạo đối tượng User giả lập để chứa tên
         User user = new User();
         user.setName((String) bookingData.get("name"));
         booking.setUser(user);
@@ -86,5 +84,42 @@ public class BookingController {
         model.addAttribute("booking", booking);
         model.addAttribute("schedule", schedule);
         return "booking/confirmation";
+    }
+
+    @GetMapping("/history")
+    public String showBookingHistory(Model model, Authentication authentication, RedirectAttributes redirectAttributes) {
+        logger.debug("Accessing booking history");
+        try {
+            List<Map<String, Object>> bookings = bookingService.getBookingHistory(authentication);
+            model.addAttribute("bookings", bookings);
+            return "booking/history";
+        } catch (Exception e) {
+            logger.error("Lỗi khi tải lịch sử đặt vé: {}", e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/booking";
+        }
+    }
+
+    @GetMapping("/cancel/{bookingId}")
+    public String cancelBooking(
+            @PathVariable("bookingId") Integer bookingId,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        logger.debug("Attempting to cancel bookingId={}", bookingId);
+        if (authentication == null || !authentication.isAuthenticated()) {
+            logger.warn("Unauthenticated access to cancel bookingId={}", bookingId);
+            redirectAttributes.addFlashAttribute("error", "Vui lòng đăng nhập để hủy vé");
+            return "redirect:/login";
+        }
+
+        try {
+            bookingService.cancelBooking(authentication, bookingId);
+            redirectAttributes.addFlashAttribute("success", "Hủy vé thành công!");
+            logger.info("Booking {} cancelled successfully", bookingId);
+        } catch (Exception e) {
+            logger.error("Error cancelling booking {}: {}", bookingId, e.getMessage());
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/booking/history";
     }
 }

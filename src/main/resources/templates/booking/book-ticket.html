@@ -150,8 +150,8 @@
                     </div>
                     <div class="card-body">
                         <p><strong>Kết thúc:</strong> <span th:text="${#temporals.format(schedule.end_time, 'dd/MM/yyyy HH:mm')}"></span></p>
-                        <p><strong>Giá người lớn:</strong> <span th:text="${schedule.adult_price} + ' VNĐ'"></span></p>
-                        <p><strong>Giá trẻ em:</strong> <span th:text="${schedule.child_price} + ' VNĐ'"></span></p>
+                        <p><strong>Giá người lớn:</strong> 60.000 VNĐ</p>
+                        <p><strong>Giá trẻ em:</strong> 30.000 VNĐ</p>
                         <p><strong>Số vé tối đa:</strong> <span th:text="${schedule.max_tickets}"></span></p>
                         <form th:action="@{/booking/book}" method="post" onsubmit="return validateForm(this)">
                             <input type="hidden" name="scheduleId" th:value="${schedule.schedule_id}">

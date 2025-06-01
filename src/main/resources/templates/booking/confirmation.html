@@ -112,7 +112,7 @@
         <div th:if="${success}" class="alert alert-success text-center slide-in" th:text="${success}"></div>
 
         <!-- Ticket -->
-        <div class="ticket slide-in">
+        <div class="ticket slide-in" th:with="formattedPrice=${#numbers.formatDecimal(booking.totalPrice, 0, 'COMMA', 0, 'POINT')}">
             <div class="ticket-header">
                 <h4>Vé Bơi KingPool</h4>
             </div>
@@ -123,7 +123,7 @@
                     <p><strong>Khung giờ:</strong> <span th:text="${#temporals.format(schedule.start_time, 'dd/MM/yyyy HH:mm')} + ' - ' + ${#temporals.format(schedule.end_time, 'dd/MM/yyyy HH:mm')}"></span></p>
                     <p><strong>Số vé người lớn:</strong> <span th:text="${booking.quantityAdult}"></span></p>
                     <p><strong>Số vé trẻ em:</strong> <span th:text="${booking.quantityChild}"></span></p>
-                    <p><strong>Tổng giá:</strong> <span th:text="${booking.totalPrice} + ' VNĐ'"></span></p>
+                    <p><strong>Tổng giá:</strong> <span th:text="${formattedPrice} + ' VNĐ'"></span></p>
                     <p><strong>Trạng thái:</strong> <span th:text="${booking.status}"></span></p>
                 </div>
             </div>
