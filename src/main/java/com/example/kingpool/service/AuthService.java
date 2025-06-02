@@ -116,17 +116,36 @@ public class AuthService {
     }
 
     // Thêm phương thức changePassword
-    public void changePassword(User currentUser, String currentPassword, String newPassword, String confirmNewPassword) {
-        if (!passwordEncoder.matches(currentPassword, currentUser.getPassword())) {
-            throw new RuntimeException("Mật khẩu hiện tại không đúng");
-        }
-        if (!newPassword.equals(confirmNewPassword)) {
-            throw new RuntimeException("Mật khẩu mới và xác nhận không khớp");
-        }
-        if (newPassword.length() < 6) {
-            throw new RuntimeException("Mật khẩu mới phải có ít nhất 6 ký tự");
-        }
-        currentUser.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(currentUser);
+public void changePassword(User currentUser, String currentPassword, String newPassword, String confirmNewPassword) {
+    // Lấy lại user từ DB để đảm bảo mật khẩu mới nhất
+    User dbUser = userRepository.findById(currentUser.getUserId())
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+    String storedPassword = dbUser.getPassword();
+
+    // Nếu password trong DB không phải dạng mã hóa BCrypt → báo lỗi cụ thể
+    if (storedPassword == null || !storedPassword.startsWith("$2a$")) {
+        throw new RuntimeException("Mật khẩu của tài khoản chưa được mã hóa, vui lòng đổi lại tài khoản hoặc đăng ký lại.");
     }
+
+    // So sánh mật khẩu nhập vào với mật khẩu đã mã hóa
+    if (!passwordEncoder.matches(currentPassword, storedPassword)) {
+        throw new RuntimeException("Mật khẩu hiện tại không đúng");
+    }
+
+    // Kiểm tra mật khẩu mới
+    if (!newPassword.equals(confirmNewPassword)) {
+        throw new RuntimeException("Mật khẩu mới và xác nhận không khớp");
+    }
+
+    if (newPassword.length() < 6) {
+        throw new RuntimeException("Mật khẩu mới phải có ít nhất 6 ký tự");
+    }
+
+    // Mã hóa và lưu
+    dbUser.setPassword(passwordEncoder.encode(newPassword));
+    userRepository.save(dbUser);
+}
+
+
 }
