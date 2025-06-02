@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                 .requestMatchers("/api/auth/profile").authenticated()
                 .requestMatchers("/dashboard", "/admin/**").hasRole("Admin")
+                .requestMatchers("/user-homepage").authenticated()
                 .anyRequest().authenticated())
             .formLogin(form -> form
                 .loginPage("/login")
@@ -53,7 +54,9 @@ public class SecurityConfig {
                 .tokenValiditySeconds(7 * 24 * 60 * 60))
             .logout(logout -> logout
                 .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout")
+                .logoutSuccessUrl("/") // Chuyển hướng về homepage sau khi đăng xuất
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
                 .permitAll());
         return http.build();
     }
