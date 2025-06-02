@@ -41,6 +41,4 @@ public class AuthController {
             return "redirect:/register";
         }
     }
-
-    // adada
 }

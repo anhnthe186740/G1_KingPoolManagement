@@ -39,32 +39,11 @@ public class HomeController {
         return "redirect:/homepage";
     }
     
-
     @GetMapping("/homepage")
     public String getHomePage() {
         return "homepage/index";
     }
     
-
-    // @PostMapping("/login")
-    // public String login(@ModelAttribute("user") User user, Model model) {
-    // User loggedInUser = authService.login(user);
-    // if (loggedInUser == null) {
-    // model.addAttribute("error", "Invalid username or password");
-    // return "auth/login";
-    // }
-    // Claims claim = jwtUtil.getClaimsFromToken(loggedInUser.getToken());
-    // User newUser = new User();
-    // newUser.setUsername(claim.getSubject());
-    // newUser.setEmail(claim.get("email", String.class));
-    // newUser.setRole(claim.get("role", String.class));
-    // System.out.println(claim.get("role", String.class));
-    // System.out.println(claim.get("email", String.class));
-    // System.out.println(claim.getSubject());
-    // model.addAttribute("user", newUser);
-    // return "auth/profile";
-    // }
-
     @GetMapping("/logout")
     public String getMethodName2() {
         return "/";
