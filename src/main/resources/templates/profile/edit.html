@@ -507,199 +507,142 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Xem trước ảnh khi người dùng chọn file
-            document.getElementById('imageFile').addEventListener('change', function (event) {
-                const file = event.target.files[0];
-                const previewImage = document.getElementById('previewImage');
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        previewImage.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            // Hiển thị hiệu ứng loading khi submit form chỉnh sửa thông tin
-            document.getElementById('editProfileForm').addEventListener('submit', function () {
-                const submitBtn = document.getElementById('submitBtn');
-                submitBtn.querySelector('span:first-child').textContent = 'Đang lưu...';
-                submitBtn.querySelector('.loading-spinner').style.display = 'inline-block';
-                submitBtn.disabled = true;
-            });
-
-            // Biến trạng thái để theo dõi tính hợp lệ của các trường
-            let isCurrentPasswordValid = false;
-            let isNewPasswordValid = false;
-            let isConfirmPasswordValid = false;
-
-            // Kiểm tra mật khẩu hiện tại (real-time)
-            document.getElementById('currentPassword').addEventListener('input', function () {
-                const currentPassword = this.value;
-                const messageDiv = document.getElementById('currentPasswordMessage');
-                const successDiv = document.getElementById('currentPasswordSuccess');
-
-                if (currentPassword.length === 0) {
-                    messageDiv.textContent = '';
-                    successDiv.textContent = '';
-                    messageDiv.classList.remove('show');
-                    successDiv.classList.remove('show');
-                    isCurrentPasswordValid = false;
-                    updateButtonState();
-                    return;
-                }
-
-                // Gửi yêu cầu AJAX để kiểm tra mật khẩu hiện tại
-                fetch('/api/auth/check-current-password', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: 'currentPassword=' + encodeURIComponent(currentPassword)
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.valid) {
-                            messageDiv.textContent = '';
-                            successDiv.textContent = 'Mật khẩu hiện tại hợp lệ';
-                            messageDiv.classList.remove('show');
-                            successDiv.classList.add('show');
-                            isCurrentPasswordValid = true;
-                        } else {
-                            messageDiv.textContent = 'Mật khẩu hiện tại không đúng';
-                            successDiv.textContent = '';
-                            messageDiv.classList.add('show');
-                            successDiv.classList.remove('show');
-                            isCurrentPasswordValid = false;
-                        }
-                        updateButtonState();
-                    })
-                    .catch(error => {
-                        console.error('Error checking current password:', error);
-                        messageDiv.textContent = 'Có lỗi xảy ra, vui lòng thử lại';
-                        successDiv.textContent = '';
-                        messageDiv.classList.add('show');
-                        successDiv.classList.remove('show');
-                        isCurrentPasswordValid = false;
-                        updateButtonState();
-                    });
-            });
-
-            // Kiểm tra mật khẩu mới (real-time)
-            document.getElementById('newPassword').addEventListener('input', function () {
-                const newPassword = this.value;
-                const messageDiv = document.getElementById('newPasswordMessage');
-                const successDiv = document.getElementById('newPasswordSuccess');
-                const confirmPassword = document.getElementById('confirmNewPassword').value;
-
-                if (newPassword.length === 0) {
-                    messageDiv.textContent = '';
-                    successDiv.textContent = '';
-                    messageDiv.classList.remove('show');
-                    successDiv.classList.remove('show');
-                    isNewPasswordValid = false;
-                    updateButtonState();
-                    validateConfirmPassword();
-                    return;
-                }
-
-                if (newPassword.length < 8) {
-                    messageDiv.textContent = 'Mật khẩu mới phải có ít nhất 8 ký tự';
-                    successDiv.textContent = '';
-                    messageDiv.classList.add('show');
-                    successDiv.classList.remove('show');
-                    isNewPasswordValid = false;
-                } else {
-                    messageDiv.textContent = '';
-                    successDiv.textContent = 'Mật khẩu mới hợp lệ';
-                    messageDiv.classList.remove('show');
-                    successDiv.classList.add('show');
-                    isNewPasswordValid = true;
-                }
-                validateConfirmPassword();
-                updateButtonState();
-            });
-
-            // Kiểm tra xác nhận mật khẩu mới (real-time)
-            document.getElementById('confirmNewPassword').addEventListener('input', function () {
-                validateConfirmPassword();
-            });
-
-            // Hàm kiểm tra xác nhận mật khẩu mới
-            function validateConfirmPassword() {
-                const newPassword = document.getElementById('newPassword').value;
-                const confirmPassword = document.getElementById('confirmNewPassword').value;
-                const messageDiv = document.getElementById('confirmPasswordMessage');
-                const successDiv = document.getElementById('confirmPasswordSuccess');
-
-                if (confirmPassword.length === 0) {
-                    messageDiv.textContent = '';
-                    successDiv.textContent = '';
-                    messageDiv.classList.remove('show');
-                    successDiv.classList.remove('show');
-                    isConfirmPasswordValid = false;
-                    updateButtonState();
-                    return;
-                }
-
-                if (newPassword !== confirmPassword) {
-                    messageDiv.textContent = 'Mật khẩu mới và xác nhận không khớp';
-                    successDiv.textContent = '';
-                    messageDiv.classList.add('show');
-                    successDiv.classList.remove('show');
-                    isConfirmPasswordValid = false;
-                } else {
-                    messageDiv.textContent = '';
-                    successDiv.textContent = 'Xác nhận mật khẩu hợp lệ';
-                    messageDiv.classList.remove('show');
-                    successDiv.classList.add('show');
-                    isConfirmPasswordValid = true;
-                }
-                updateButtonState();
-            }
-
-            // Cập nhật trạng thái nút "Thay đổi mật khẩu"
-            function updateButtonState() {
-                const changePasswordBtn = document.getElementById('changePasswordBtn');
-                if (isCurrentPasswordValid && isNewPasswordValid && isConfirmPasswordValid) {
-                    changePasswordBtn.disabled = false;
-                } else {
-                    changePasswordBtn.disabled = true;
-                }
-            }
-
-            // Hiển thị modal xác nhận khi bấm "Thay đổi mật khẩu"
-            document.getElementById('changePasswordBtn').addEventListener('click', function (event) {
-                const modal = new bootstrap.Modal(document.getElementById('confirmChangePasswordModal'));
-                modal.show();
-            });
-
-            // Xử lý xác nhận thay đổi mật khẩu
-            document.getElementById('confirmChangePasswordBtn').addEventListener('click', function () {
-                const form = document.getElementById('changePasswordForm');
-                const changePasswordBtn = document.getElementById('changePasswordBtn');
-                changePasswordBtn.querySelector('span:first-child').textContent = 'Đang thay đổi...';
-                changePasswordBtn.querySelector('.loading-spinner').style.display = 'inline-block';
-                changePasswordBtn.disabled = true;
-                form.submit();
-            });
-
-            // Hiển thị thông báo Toastr khi cập nhật thành công hoặc lỗi
-            const successMessage = document.getElementById('successMessage');
-            const errorMessage = document.getElementById('errorMessage');
-            const passwordErrorMessage = document.getElementById('passwordError');
-            if (successMessage && successMessage.textContent) {
-                toastr.success(successMessage.textContent);
-            }
-            if (errorMessage && errorMessage.textContent) {
-                toastr.error(errorMessage.textContent);
-            }
-            if (passwordErrorMessage && passwordErrorMessage.textContent) {
-                toastr.error(passwordErrorMessage.textContent);
+    document.addEventListener('DOMContentLoaded', function () {
+        // Xem trước ảnh khi người dùng chọn file
+        document.getElementById('imageFile').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            const previewImage = document.getElementById('previewImage');
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    previewImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
             }
         });
-    </script>
+
+        // Hiển thị hiệu ứng loading khi submit form chỉnh sửa thông tin
+        document.getElementById('editProfileForm').addEventListener('submit', function () {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.querySelector('span:first-child').textContent = 'Đang lưu...';
+            submitBtn.querySelector('.loading-spinner').style.display = 'inline-block';
+            submitBtn.disabled = true;
+        });
+
+        // Biến trạng thái để theo dõi tính hợp lệ của các trường
+        let isNewPasswordValid = false;
+        let isConfirmPasswordValid = false;
+
+        // Kiểm tra mật khẩu mới
+        document.getElementById('newPassword').addEventListener('input', function () {
+            const newPassword = this.value;
+            const messageDiv = document.getElementById('newPasswordMessage');
+            const successDiv = document.getElementById('newPasswordSuccess');
+            const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+            if (newPassword.length === 0) {
+                messageDiv.textContent = '';
+                successDiv.textContent = '';
+                messageDiv.classList.remove('show');
+                successDiv.classList.remove('show');
+                isNewPasswordValid = false;
+                updateButtonState();
+                validateConfirmPassword();
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                messageDiv.textContent = 'Mật khẩu mới phải có ít nhất 6 ký tự';
+                successDiv.textContent = '';
+                messageDiv.classList.add('show');
+                successDiv.classList.remove('show');
+                isNewPasswordValid = false;
+            } else {
+                messageDiv.textContent = '';
+                successDiv.textContent = 'Mật khẩu mới hợp lệ';
+                messageDiv.classList.remove('show');
+                successDiv.classList.add('show');
+                isNewPasswordValid = true;
+            }
+            validateConfirmPassword();
+            updateButtonState();
+        });
+
+        // Kiểm tra xác nhận mật khẩu mới
+        document.getElementById('confirmNewPassword').addEventListener('input', function () {
+            validateConfirmPassword();
+        });
+
+        function validateConfirmPassword() {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmNewPassword').value;
+            const messageDiv = document.getElementById('confirmPasswordMessage');
+            const successDiv = document.getElementById('confirmPasswordSuccess');
+
+            if (confirmPassword.length === 0) {
+                messageDiv.textContent = '';
+                successDiv.textContent = '';
+                messageDiv.classList.remove('show');
+                successDiv.classList.remove('show');
+                isConfirmPasswordValid = false;
+                updateButtonState();
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                messageDiv.textContent = 'Mật khẩu mới và xác nhận không khớp';
+                successDiv.textContent = '';
+                messageDiv.classList.add('show');
+                successDiv.classList.remove('show');
+                isConfirmPasswordValid = false;
+            } else {
+                messageDiv.textContent = '';
+                successDiv.textContent = 'Xác nhận mật khẩu hợp lệ';
+                messageDiv.classList.remove('show');
+                successDiv.classList.add('show');
+                isConfirmPasswordValid = true;
+            }
+            updateButtonState();
+        }
+
+        function updateButtonState() {
+            const changePasswordBtn = document.getElementById('changePasswordBtn');
+            if (isNewPasswordValid && isConfirmPasswordValid) {
+                changePasswordBtn.disabled = false;
+            } else {
+                changePasswordBtn.disabled = true;
+            }
+        }
+
+        document.getElementById('changePasswordBtn').addEventListener('click', function () {
+            const modal = new bootstrap.Modal(document.getElementById('confirmChangePasswordModal'));
+            modal.show();
+        });
+
+        document.getElementById('confirmChangePasswordBtn').addEventListener('click', function () {
+            const form = document.getElementById('changePasswordForm');
+            const changePasswordBtn = document.getElementById('changePasswordBtn');
+            changePasswordBtn.querySelector('span:first-child').textContent = 'Đang thay đổi...';
+            changePasswordBtn.querySelector('.loading-spinner').style.display = 'inline-block';
+            changePasswordBtn.disabled = true;
+            form.submit();
+        });
+
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const passwordErrorMessage = document.getElementById('passwordError');
+        if (successMessage && successMessage.textContent) {
+            toastr.success(successMessage.textContent);
+        }
+        if (errorMessage && errorMessage.textContent) {
+            toastr.error(errorMessage.textContent);
+        }
+        if (passwordErrorMessage && passwordErrorMessage.textContent) {
+            toastr.error(passwordErrorMessage.textContent);
+        }
+    });
+</script>
+
 </body>
 
 </html>

@@ -117,23 +117,24 @@ public class AuthService {
 
     // Thêm phương thức changePassword
 public void changePassword(User currentUser, String currentPassword, String newPassword, String confirmNewPassword) {
-    // Lấy lại user từ DB để đảm bảo mật khẩu mới nhất
     User dbUser = userRepository.findById(currentUser.getUserId())
-            .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+        .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
     String storedPassword = dbUser.getPassword();
+    System.out.println("⛳ Nhập: " + currentPassword);
+    System.out.println("🔐 DB: " + storedPassword);
 
-    // Nếu password trong DB không phải dạng mã hóa BCrypt → báo lỗi cụ thể
     if (storedPassword == null || !storedPassword.startsWith("$2a$")) {
-        throw new RuntimeException("Mật khẩu của tài khoản chưa được mã hóa, vui lòng đổi lại tài khoản hoặc đăng ký lại.");
+        throw new RuntimeException("Mật khẩu của tài khoản chưa được mã hóa.");
     }
 
-    // So sánh mật khẩu nhập vào với mật khẩu đã mã hóa
-    if (!passwordEncoder.matches(currentPassword, storedPassword)) {
+    boolean matches = passwordEncoder.matches(currentPassword, storedPassword);
+    System.out.println("🎯 matches: " + matches);
+
+    if (!matches) {
         throw new RuntimeException("Mật khẩu hiện tại không đúng");
     }
 
-    // Kiểm tra mật khẩu mới
     if (!newPassword.equals(confirmNewPassword)) {
         throw new RuntimeException("Mật khẩu mới và xác nhận không khớp");
     }
@@ -142,10 +143,10 @@ public void changePassword(User currentUser, String currentPassword, String newP
         throw new RuntimeException("Mật khẩu mới phải có ít nhất 6 ký tự");
     }
 
-    // Mã hóa và lưu
     dbUser.setPassword(passwordEncoder.encode(newPassword));
     userRepository.save(dbUser);
 }
+
 
 
 }
