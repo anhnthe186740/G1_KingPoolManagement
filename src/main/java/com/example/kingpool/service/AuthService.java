@@ -4,17 +4,22 @@ import com.example.kingpool.entity.Role;
 import com.example.kingpool.entity.User;
 import com.example.kingpool.repository.RoleRepository;
 import com.example.kingpool.repository.UserRepository;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -58,18 +63,12 @@ public class AuthService {
         user.setCreatedAt(LocalDateTime.now());
         user.setStatus("ACTIVE");
 
-        userRepository.save(user);
-
-        return user;
+        return userRepository.save(user);
     }
 
     public User findByUsername(String username) {
-        Optional<User> user = userRepository.findByUsername(username);
-        if (user.isPresent()) {
-            return user.get();
-        } else {
-            throw new RuntimeException("User not found");
-        }
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     public User login(User request) {
@@ -79,22 +78,55 @@ public class AuthService {
         Optional<User> user = userRepository.findByUsername(request.getUsername());
         if (user.isEmpty()) {
             throw new RuntimeException("User not found");
-        } else {
-            request.setEmail(user.get().getEmail());
         }
-
-        String username = authentication.getName();
-        String role = authentication.getAuthorities().iterator().next().getAuthority().substring(5); // Bỏ "ROLE_"
-
+        request.setEmail(user.get().getEmail());
         return request;
     }
 
     public User findByEmail(String email) {
-        Optional<User> user = userRepository.findByEmail(email);
-        if (user.isPresent()) {
-            return user.get();
-        } else {
-            throw new RuntimeException("User not found");
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    // Thêm phương thức getUserFromAuthentication
+    public User getUserFromAuthentication(Authentication authentication) {
+        String username = authentication.getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    // Thêm phương thức updateUserProfile
+    public void updateUserProfile(User currentUser, User updatedUser, MultipartFile imageFile) throws IOException {
+        currentUser.setName(updatedUser.getName());
+        currentUser.setEmail(updatedUser.getEmail());
+        currentUser.setPhoneNumber(updatedUser.getPhoneNumber());
+        currentUser.setGender(updatedUser.getGender());
+        currentUser.setDateOfBirth(updatedUser.getDateOfBirth());
+        currentUser.setAddress(updatedUser.getAddress());
+
+        if (!imageFile.isEmpty()) {
+            String fileName = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
+            Path filePath = Paths.get("uploads/", fileName);
+            Files.createDirectories(filePath.getParent());
+            Files.write(filePath, imageFile.getBytes());
+            currentUser.setImage(fileName);
         }
+
+        userRepository.save(currentUser);
+    }
+
+    // Thêm phương thức changePassword
+    public void changePassword(User currentUser, String currentPassword, String newPassword, String confirmNewPassword) {
+        if (!passwordEncoder.matches(currentPassword, currentUser.getPassword())) {
+            throw new RuntimeException("Mật khẩu hiện tại không đúng");
+        }
+        if (!newPassword.equals(confirmNewPassword)) {
+            throw new RuntimeException("Mật khẩu mới và xác nhận không khớp");
+        }
+        if (newPassword.length() < 6) {
+            throw new RuntimeException("Mật khẩu mới phải có ít nhất 6 ký tự");
+        }
+        currentUser.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(currentUser);
     }
 }

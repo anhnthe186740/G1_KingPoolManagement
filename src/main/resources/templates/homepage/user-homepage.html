@@ -116,12 +116,6 @@
 </head>
 <body>
     <!-- Header Start -->
-    <!-- <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-            <span class="sr-only">Loading...</span>
-        </div>
-    </div> -->
-
     <div class="container-fluid nav-bar sticky-top px-4 py-2 py-lg-0">
         <nav class="navbar navbar-expand-lg navbar-light">
             <a href="/" class="navbar-brand p-0">
@@ -132,7 +126,12 @@
                 <span class="fa fa-bars"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarCollapse">
-               
+                <div class="navbar-nav ms-auto py-0">
+                    <a href="/user-homepage" class="nav-item nav-link active">Trang chủ</a>
+                    <a href="/profile" class="nav-item nav-link">Hồ sơ</a>
+                    <a href="/booking/freestyle-booking" class="nav-item nav-link">Đặt lịch bơi</a>
+                    <a href="/booking/history" class="nav-item nav-link">Lịch sử đặt vé</a>
+                </div>
                 <div class="team-icon d-none d-xl-flex justify-content-center me-3">
                     <a class="btn btn-square btn-light rounded-circle mx-1" href="#"><i class="fab fa-facebook-f"></i></a>
                     <a class="btn btn-square btn-light rounded-circle mx-1" href="#"><i class="fab fa-twitter"></i></a>
@@ -163,43 +162,13 @@
                             <div class="d-flex gap-2 flex-wrap">
                                 <a href="/profile" class="btn btn-primary">Xem chi tiết</a>
                                 <a href="/profile/edit" class="btn btn-outline-primary">Chỉnh sửa</a>
-                                <a href="/profile/change-password" class="btn btn-outline-primary">Đổi mật khẩu</a>
+                                <a href="/profile/edit#change-password" class="btn btn-outline-primary">Đổi mật khẩu</a>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- Xem lịch học -->
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="fas fa-calendar-alt icon"></i> Xem lịch học</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text">Xem lịch các buổi học bơi đã đăng ký của bạn.</p>
-                            <div class="d-flex gap-2 flex-wrap">
-                                <a href="/schedule" class="btn btn-primary">Xem lịch</a>
-                                <a href="/schedule/upcoming" class="btn btn-outline-primary">Lịch sắp tới</a>
-                                <a href="/schedule/past" class="btn btn-outline-primary">Lịch đã qua</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Đăng ký khóa học bơi -->
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="fas fa-swimmer icon"></i> Đăng ký khóa học bơi</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text">Xem danh sách khóa học và đăng ký tham gia.</p>
-                            <div class="d-flex gap-2 flex-wrap">
-                                <a href="/courses/register" class="btn btn-primary">Đăng ký ngay</a>
-                                <a href="/courses" class="btn btn-outline-primary">Xem khóa học</a>
-                                <a href="/courses/recommended" class="btn btn-outline-primary">Khóa học gợi ý</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                
+               
                 <!-- Đặt lịch bơi tự do -->
                 <div class="col-md-4 mb-4">
                     <div class="card">
@@ -209,65 +178,14 @@
                         <div class="card-body">
                             <p class="card-text">Đặt slot bơi tự do không theo lớp học.</p>
                             <div class="d-flex gap-2 flex-wrap">
-                                <a href="/freestyle-booking" class="btn btn-primary">Đặt lịch</a>
-                                <a href="/freestyle-booking/available" class="btn btn-outline-primary">Slot trống</a>
-                                <a href="/freestyle-booking/history" class="btn btn-outline-primary">Lịch đã đặt</a>
+                                <a href="/booking" class="btn btn-primary">Đặt lịch</a>
+                                
+                                <a href="/booking/history" class="btn btn-outline-primary">Lịch đã đặt</a>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- Gói bơi & thanh toán -->
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="fas fa-credit-card icon"></i> Gói bơi & thanh toán</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text">Xem gói đang dùng, nạp tiền, lịch sử thanh toán.</p>
-                            <div class="d-flex gap-2 flex-wrap">
-                                <a href="/packages-payment" class="btn btn-primary">Xem chi tiết</a>
-                                <a href="/packages-payment/recharge" class="btn btn-outline-primary">Nạp tiền</a>
-                                <a href="/packages-payment/history" class="btn btn-outline-primary">Lịch sử</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Thông báo -->
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="fas fa-bell icon"></i> Thông báo</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text">Nhận thông báo từ hệ thống hoặc coach.</p>
-                            <div class="d-flex gap-2 flex-wrap">
-                                <a href="/notifications" class="btn btn-primary">Xem thông báo</a>
-                                <a href="/notifications/unread" class="btn btn-outline-primary">Chưa đọc</a>
-                                <a href="/notifications/all" class="btn btn-outline-primary">Tất cả</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Lịch sử hoạt động -->
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title"><i class="fas fa-history icon"></i> Lịch sử hoạt động</h5>
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text">Xem các lần học, bơi, đặt lịch đã qua.</p>
-                            <div class="d-flex gap-2 flex-wrap">
-                                <a href="/activity-history" class="btn btn-primary">Xem lịch sử</a>
-                                <a href="/activity-history/recent" class="btn btn-outline-primary">Gần đây</a>
-                                <a href="/activity-history/all" class="btn btn-outline-primary">Tất cả</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Body End -->
+               
 
     <!-- Footer Start -->
     <div class="container-fluid footer py-5 wow fadeIn" data-wow-delay="0.2s">
@@ -280,7 +198,7 @@
                         </a>
                         <div class="d-flex align-items-center">
                             <i class="fas fa-map-marker-alt text-primary me-3"></i>
-                            <p class="text-white mb-0">Thon 4 Thach Hoa, Thach That, Ha Noi</p>
+                            <p class="text-white mb-0">Thôn 4 Thạch Hòa, Thạch Thất, Hà Nội</p>
                         </div>
                         <div class="d-flex align-items-center">
                             <i class="fas fa-envelope text-primary me-3"></i>
@@ -323,7 +241,7 @@
                                 <p class="mb-0"><i class="fas fa-clock text-primary me-2"></i> 11:00 AM - 16:00 PM</p>
                             </div>
                             <div class="opening-clock flex-shrink-0">
-                                <h6 class="text-white mb-0 me-auto">Satur - Sunday:</h6>
+                                <h6 class="text-white mb-0 me-auto">Saturday - Sunday:</h6>
                                 <p class="mb-0"><i class="fas fa-clock text-primary me-2"></i> 09:00 AM - 17:00 PM</p>
                             </div>
                             <div class="opening-clock flex-shrink-0">
@@ -333,7 +251,7 @@
                         </div>
                         <div>
                             <p class="text-white mb-2">Payment Accepted</p>
-                            <img th:src="@{/img/payment.png}" class="img-fluid" alt="Image">
+                            <img th:src="@{/img/payment.png}" class="img-fluid" alt="Payment Methods">
                         </div>
                     </div>
                 </div>
@@ -345,7 +263,7 @@
         <div class="container">
             <div class="row g-4 align-items-center">
                 <div class="col-md-6 text-center text-md-start mb-md-0">
-                    <span class="text-body"><a href="#" class="border-bottom text-white"><i class="fas fa-copyright text-light me-2"></i>King Pool</a>, All right reserved.</span>
+                    <span class="text-body"><a href="#" class="border-bottom text-white"><i class="fas fa-copyright text-light me-2"></i>King Pool</a>, All rights reserved.</span>
                 </div>
                 <div class="col-md-6 text-center text-md-end text-body">
                     Designed By <a class="border-bottom text-white" href="#">King Pool Team</a>
@@ -366,6 +284,5 @@
     <script th:src="@{/lib/lightbox/js/lightbox.min.js}"></script>
     <script th:src="@{/lib/owlcarousel/owl.carousel.min.js}"></script>
     <script th:src="@{/js/main.js}"></script>
-    <!-- Footer End -->
 </body>
 </html>

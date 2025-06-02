@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặt Vé Bơi - KingPool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #FFFFFF;
+            min-height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+        .navbar {
+            background: #FFFFFF;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .navbar-brand {
+            font-weight: 700;
+            color: #0288D1 !important;
+        }
+        .nav-link {
+            color: #0288D1 !important;
+            font-weight: 500;
+        }
+        .nav-link:hover {
+            color: #01579B !important;
+        }
+        .container-main {
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            border: 1px solid #E3F2FD;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            background: #FFFFFF;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background: #E3F2FD;
+            color: #0288D1;
+            border-radius: 10px 10px 0 0;
+            padding: 1rem;
+            font-weight: 500;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .stepper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .stepper button {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #0288D1;
+            color: #FFFFFF;
+            border: none;
+            font-size: 1rem;
+            line-height: 1;
+        }
+        .stepper input {
+            width: 50px;
+            text-align: center;
+            border: 1px solid #E3F2FD;
+            border-radius: 5px;
+            padding: 0.25rem;
+        }
+        .btn-book {
+            background: #0288D1;
+            border: none;
+            border-radius: 20px;
+            padding: 0.5rem 1.5rem;
+            color: #FFFFFF;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn-book:hover {
+            background: #01579B;
+        }
+        .modal-content {
+            border-radius: 10px;
+            border: none;
+        }
+        .modal-header {
+            background: #E3F2FD;
+            border-bottom: none;
+        }
+        .modal-title {
+            color: #0288D1;
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        footer {
+            background: #FFFFFF;
+            color: #0288D1;
+            padding: 1rem 0;
+            text-align: center;
+            border-top: 1px solid #E3F2FD;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">KingPool</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="/homepage">Trang chủ</a>
+                    <a class="nav-link" href="/booking">Đặt vé</a>
+                    <a class="nav-link" href="/logout">Đăng xuất</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Nội dung chính -->
+    <div class="container container-main">
+        <h2 class="text-center mb-4 fade-in">Đặt Vé Bơi</h2>
+
+        <!-- Thông báo -->
+        <div th:if="${success}" class="alert alert-success text-center fade-in" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-danger text-center fade-in" th:text="${error}"></div>
+
+        <!-- Danh sách khung giờ -->
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            <div th:each="schedule : ${schedules}" class="col">
+                <div class="card fade-in">
+                    <div class="card-header">
+                        Khung giờ: <span th:text="${#temporals.format(schedule.start_time, 'dd/MM/yyyy HH:mm')}"></span>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Kết thúc:</strong> <span th:text="${#temporals.format(schedule.end_time, 'dd/MM/yyyy HH:mm')}"></span></p>
+                        <p><strong>Giá người lớn:</strong> 60.000 VNĐ</p>
+                        <p><strong>Giá trẻ em:</strong> 30.000 VNĐ</p>
+                        <p><strong>Số vé tối đa:</strong> <span th:text="${schedule.max_tickets}"></span></p>
+                        <form th:action="@{/booking/book}" method="post" onsubmit="return validateForm(this)">
+                            <input type="hidden" name="scheduleId" th:value="${schedule.schedule_id}">
+                            <div class="mb-3">
+                                <label class="form-label">Vé người lớn:</label>
+                                <div class="stepper">
+                                    <button type="button" onclick="decrement(this)">-</button>
+                                    <input type="number" name="quantityAdult" min="0" value="0" class="form-control">
+                                    <button type="button" onclick="increment(this)">+</button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Vé trẻ em:</label>
+                                <div class="stepper">
+                                    <button type="button" onclick="decrement(this)">-</button>
+                                    <input type="number" name="quantityChild" min="0" value="0" class="form-control">
+                                    <button type="button" onclick="increment(this)">+</button>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-book">Đặt vé ngay</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal thông báo -->
+    <div class="modal fade" id="notificationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thông báo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalMessage"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2025 KingPool. All rights reserved.</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function increment(button) {
+            const input = button.previousElementSibling;
+            input.value = parseInt(input.value) + 1;
+        }
+
+        function decrement(button) {
+            const input = button.nextElementSibling;
+            if (parseInt(input.value) > 0) {
+                input.value = parseInt(input.value) - 1;
+            }
+        }
+
+        function validateForm(form) {
+            const adult = parseInt(form.quantityAdult.value);
+            const child = parseInt(form.quantityChild.value);
+            if (adult + child === 0) {
+                const modal = new bootstrap.Modal(document.getElementById('notificationModal'));
+                document.getElementById('modalMessage').textContent = 'Vui lòng chọn ít nhất 1 vé!';
+                modal.show();
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>

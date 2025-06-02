@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chỉnh sửa hồ sơ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #6ab7f5, #c3a7ff);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            width: 100%;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .main-container {
+            width: 100%;
+            min-height: 100vh;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .content-wrapper {
+            max-width: 1400px;
+            width: 100%;
+        }
+        .widget-card {
+            border-radius: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: #ffffff;
+        }
+        .widget-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            background: linear-gradient(90deg, #5a9bd4, #b39cd0);
+            color: white;
+            font-weight: 500;
+            border-top-left-radius: 15px !important;
+            border-top-right-radius: 15px !important;
+        }
+        .card-body {
+            padding: 25px;
+        }
+        .profile-image {
+            max-width: 130px;
+            border-radius: 50%;
+            border: 4px solid #5a9bd4;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 15px;
+        }
+        .profile-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(90, 155, 212, 0.5);
+        }
+        .sidebar-nav a {
+            display: block;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            color: #34495e;
+            font-weight: 500;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        .sidebar-nav a.active {
+            background: linear-gradient(90deg, #5a9bd4, #b39cd0);
+            color: white;
+        }
+        .sidebar-nav a:hover {
+            background: #f1f3f5;
+            color: #5a9bd4;
+        }
+        .list-group-item {
+            border: none;
+            padding: 12px 0;
+            display: flex;
+            align-items: center;
+        }
+        .list-group-item h6 {
+            margin: 0;
+            font-weight: 500;
+            color: #34495e;
+        }
+        .list-group-item span {
+            margin-left: 10px;
+            color: #636e72;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #34495e;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 1px solid #dfe6e9;
+            padding: 10px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #5a9bd4;
+            box-shadow: 0 0 0 0.2rem rgba(90, 155, 212, 0.25);
+        }
+        .error-message {
+            color: #e74c3c;
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .success-message {
+            color: #28a745;
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .error-message.show, .success-message.show {
+            opacity: 1;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #5a9bd4, #b39cd0);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-weight: 500;
+            transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(90deg, #b39cd0, #5a9bd4);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(90, 155, 212, 0.3);
+        }
+        .btn-primary:disabled {
+            background: #b2bec3;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: #b2bec3;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #95a5a6;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .loading-spinner {
+            display: none;
+            margin-left: 10px;
+        }
+        .nav-tabs {
+            border-bottom: 2px solid #dfe6e9;
+            margin-bottom: 20px;
+        }
+        .nav-tabs .nav-link {
+            color: #34495e;
+            font-weight: 500;
+            border: none;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .nav-tabs .nav-link.active {
+            color: #5a9bd4;
+            border-bottom: 2px solid #5a9bd4;
+            background: transparent;
+        }
+        .nav-tabs .nav-link:hover {
+            color: #5a9bd4;
+            border-bottom: 2px solid #5a9bd4;
+        }
+        .tab-content {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .modal-content {
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .modal-header {
+            background: linear-gradient(90deg, #5a9bd4, #b39cd0);
+            color: white;
+            border-top-left-radius: 15px !important;
+            border-top-right-radius: 15px !important;
+        }
+        @media (max-width: 992px) {
+            .main-container {
+                padding: 10px;
+            }
+            .col-lg-4, .col-lg-8 {
+                margin-bottom: 20px;
+            }
+            .col-md-6 {
+                margin-bottom: 15px;
+            }
+        }
+        @media (max-width: 576px) {
+            .btn-primary, .btn-secondary {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="content-wrapper">
+            <div class="row gy-4 gy-lg-0">
+                <!-- Sidebar -->
+                <div class="col-12 col-lg-4 col-xl-3">
+                    <div class="row gy-4">
+                        <div class="col-12">
+                            <div class="card widget-card border-light shadow-sm">
+                                <div class="card-header text-bg-primary">Welcome, <span th:text="${user.name}"></span></div>
+                                <div class="card-body text-center">
+                                    <img th:if="${user.image != null}" th:src="@{'/uploads/' + ${user.image}}" class="profile-image" alt="Ảnh đại diện" id="profileImage">
+                                    <img th:if="${user.image == null}" src="/assets/img/default-profile.jpg" class="profile-image" alt="Ảnh đại diện mặc định" id="profileImage">
+                                    <h5 class="mb-1" th:text="${user.name ?: 'Chưa cung cấp'}"></h5>
+                                    <p class="text-secondary mb-4" th:text="${user.role.roleName ?: 'Chưa cung cấp'}"></p>
+                                    <div class="sidebar-nav">
+                                        <a th:href="@{/profile}"><i class="bi bi-person-circle me-2"></i> Xem hồ sơ</a>
+                                        <a href="#personal-info-tab" data-bs-toggle="tab" class="active"><i class="bi bi-pencil-square me-2"></i> Chỉnh sửa</a>
+                                        <a href="#change-password-tab" data-bs-toggle="tab"><i class="bi bi-lock-fill me-2"></i> Đổi mật khẩu</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="card widget-card border-light shadow-sm">
+                                <div class="card-header text-bg-primary">Thông tin cơ bản</div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush mb-0">
+                                        <li class="list-group-item">
+                                            <h6><i class="bi bi-geo-alt-fill me-2"></i> Địa chỉ</h6>
+                                            <span th:text="${user.address ?: 'Chưa cung cấp'}"></span>
+                                        </li>
+                                        <li class="list-group-item">
+                                            <h6><i class="bi bi-person-fill me-2"></i> Vai trò</h6>
+                                            <span th:text="${user.role.roleName ?: 'Chưa cung cấp'}"></span>
+                                        </li>
+                                        <li class="list-group-item">
+                                            <h6><i class="bi bi-clock-fill me-2"></i> Ngày tạo</h6>
+                                            <span th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm') ?: 'Chưa cung cấp'}"></span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Main Content -->
+                <div class="col-12 col-lg-8 col-xl-9">
+                    <div class="card widget-card border-light shadow-sm">
+                        <div class="card-body p-4">
+                            <!-- Flash messages -->
+                            <div th:if="${success}" class="alert alert-success d-none" th:text="${success}" id="successMessage"></div>
+                            <div th:if="${error}" class="alert alert-danger d-none" th:text="${error}" id="errorMessage"></div>
+                            <div th:if="${passwordError}" class="alert alert-danger d-none" th:text="${passwordError}" id="passwordError"></div>
+
+                            <!-- Tab Navigation -->
+                            <ul class="nav nav-tabs" id="profileTabs" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="personal-info-tab" data-bs-toggle="tab" href="#personal-info" role="tab">Thông tin cá nhân</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" id="change-password-tab" data-bs-toggle="tab" href="#change-password" role="tab">Thay đổi mật khẩu</a>
+                                </li>
+                            </ul>
+
+                            <!-- Tab Content -->
+                            <div class="tab-content" id="profileTabContent">
+                                <!-- Tab Thông tin cá nhân -->
+                                <div class="tab-pane fade show active" id="personal-info" role="tabpanel">
+                                    <h5 class="mb-3">Chỉnh sửa thông tin</h5>
+                                    <form th:action="@{/profile/edit}" th:object="${user}" method="post" enctype="multipart/form-data" id="editProfileForm">
+                                        <div class="row gy-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Họ và tên</label>
+                                                <input type="text" class="form-control" th:field="*{name}" required>
+                                                <div th:if="${#fields.hasErrors('name')}" class="error-message" th:errors="*{name}"></div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Email</label>
+                                                <input type="email" class="form-control" th:field="*{email}" required>
+                                                <div th:if="${#fields.hasErrors('email')}" class="error-message" th:errors="*{email}"></div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Số điện thoại</label>
+                                                <input type="text" class="form-control" th:field="*{phoneNumber}">
+                                                <div th:if="${#fields.hasErrors('phoneNumber')}" class="error-message" th:errors="*{phoneNumber}"></div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Giới tính</label>
+                                                <select class="form-select" th:field="*{gender}">
+                                                    <option value="">-- Chọn --</option>
+                                                    <option value="M">Nam</option>
+                                                    <option value="F">Nữ</option>
+                                                    <option value="Other">Khác</option>
+                                                </select>
+                                                <div th:if="${#fields.hasErrors('gender')}" class="error-message" th:errors="*{gender}"></div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Ngày sinh</label>
+                                                <input type="date" class="form-control" id="dateOfBirth" name="dateOfBirth" th:value="${user.dateOfBirth != null ? #temporals.format(user.dateOfBirth, 'yyyy-MM-dd') : ''}">
+                                                <div th:if="${#fields.hasErrors('dateOfBirth')}" class="error-message" th:errors="*{dateOfBirth}"></div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Địa chỉ</label>
+                                                <input type="text" class="form-control" th:field="*{address}">
+                                                <div th:if="${#fields.hasErrors('address')}" class="error-message" th:errors="*{address}"></div>
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label">Ảnh đại diện</label>
+                                                <div class="row gy-2">
+                                                    <div class="col-12">
+                                                        <img th:if="${user.image != null}" th:src="@{'/uploads/' + ${user.image}}" class="profile-image img-fluid" alt="Ảnh đại diện" id="previewImage">
+                                                        <img th:if="${user.image == null}" src="/assets/img/default-profile.jpg" class="profile-image img-fluid" alt="Ảnh đại diện mặc định" id="previewImage">
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <input type="file" class="form-control" name="imageFile" id="imageFile" accept="image/*">
+                                                        <div th:if="${#fields.hasErrors('image')}" class="error-message" th:errors="*{image}"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <button type="submit" class="btn btn-primary" id="submitBtn">
+                                                    <span>Lưu thay đổi</span>
+                                                    <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+                                                </button>
+                                                <a th:href="@{/profile}" class="btn btn-secondary ms-2">Quay lại</a>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- Tab Thay đổi mật khẩu -->
+                                <div class="tab-pane fade" id="change-password" role="tabpanel">
+                                    <h5 class="mb-3">Thay đổi mật khẩu</h5>
+                                    <form th:action="@{/profile/change-password}" method="post" id="changePasswordForm">
+                                        <div class="row gy-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Mật khẩu hiện tại</label>
+                                                <input type="password" class="form-control" name="currentPassword" id="currentPassword" required>
+                                                <div id="currentPasswordMessage" class="error-message"></div>
+                                                <div id="currentPasswordSuccess" class="success-message"></div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Mật khẩu mới</label>
+                                                <input type="password" class="form-control" name="newPassword" id="newPassword" required>
+                                                <div id="newPasswordMessage" class="error-message"></div>
+                                                <div id="newPasswordSuccess" class="success-message"></div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Xác nhận mật khẩu mới</label>
+                                                <input type="password" class="form-control" name="confirmNewPassword" id="confirmNewPassword" required>
+                                                <div id="confirmPasswordMessage" class="error-message"></div>
+                                                <div id="confirmPasswordSuccess" class="success-message"></div>
+                                            </div>
+                                            <div class="col-12">
+                                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmChangePasswordModal" id="changePasswordBtn" disabled>
+                                                    <span>Thay đổi mật khẩu</span>
+                                                    <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal xác nhận thay đổi mật khẩu -->
+    <div class="modal fade" id="confirmChangePasswordModal" tabindex="-1" aria-labelledby="confirmChangePasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmChangePasswordModalLabel">Xác nhận thay đổi mật khẩu</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Bạn có chắc chắn muốn thay đổi mật khẩu không?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" id="confirmChangePasswordBtn">Xác nhận</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Xem trước ảnh khi người dùng chọn file
+            document.getElementById('imageFile').addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                const previewImage = document.getElementById('previewImage');
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Hiển thị hiệu ứng loading khi submit form chỉnh sửa thông tin
+            document.getElementById('editProfileForm').addEventListener('submit', function() {
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.querySelector('span:first-child').textContent = 'Đang lưu...';
+                submitBtn.querySelector('.loading-spinner').style.display = 'inline-block';
+                submitBtn.disabled = true;
+            });
+
+            // Biến trạng thái để theo dõi tính hợp lệ của các trường
+            let isCurrentPasswordValid = false;
+            let isNewPasswordValid = false;
+            let isConfirmPasswordValid = false;
+
+            // Kiểm tra mật khẩu hiện tại (real-time)
+            document.getElementById('currentPassword').addEventListener('input', function() {
+                const currentPassword = this.value;
+                const messageDiv = document.getElementById('currentPasswordMessage');
+                const successDiv = document.getElementById('currentPasswordSuccess');
+
+                if (currentPassword.length === 0) {
+                    messageDiv.textContent = '';
+                    successDiv.textContent = '';
+                    messageDiv.classList.remove('show');
+                    successDiv.classList.remove('show');
+                    isCurrentPasswordValid = false;
+                    updateButtonState();
+                    return;
+                }
+
+                // Gửi yêu cầu AJAX để kiểm tra mật khẩu hiện tại
+                fetch('/api/auth/check-current-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'currentPassword=' + encodeURIComponent(currentPassword)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.valid) {
+                        messageDiv.textContent = '';
+                        successDiv.textContent = 'Mật khẩu hiện tại hợp lệ';
+                        messageDiv.classList.remove('show');
+                        successDiv.classList.add('show');
+                        isCurrentPasswordValid = true;
+                    } else {
+                        messageDiv.textContent = 'Mật khẩu hiện tại không đúng';
+                        successDiv.textContent = '';
+                        messageDiv.classList.add('show');
+                        successDiv.classList.remove('show');
+                        isCurrentPasswordValid = false;
+                    }
+                    updateButtonState();
+                })
+                .catch(error => {
+                    console.error('Error checking current password:', error);
+                    messageDiv.textContent = 'Có lỗi xảy ra, vui lòng thử lại';
+                    successDiv.textContent = '';
+                    messageDiv.classList.add('show');
+                    successDiv.classList.remove('show');
+                    isCurrentPasswordValid = false;
+                    updateButtonState();
+                });
+            });
+
+            // Kiểm tra mật khẩu mới (real-time)
+            document.getElementById('newPassword').addEventListener('input', function() {
+                const newPassword = this.value;
+                const messageDiv = document.getElementById('newPasswordMessage');
+                const successDiv = document.getElementById('newPasswordSuccess');
+                const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+                if (newPassword.length === 0) {
+                    messageDiv.textContent = '';
+                    successDiv.textContent = '';
+                    messageDiv.classList.remove('show');
+                    successDiv.classList.remove('show');
+                    isNewPasswordValid = false;
+                    updateButtonState();
+                    validateConfirmPassword();
+                    return;
+                }
+
+                if (newPassword.length < 8) {
+                    messageDiv.textContent = 'Mật khẩu mới phải có ít nhất 8 ký tự';
+                    successDiv.textContent = '';
+                    messageDiv.classList.add('show');
+                    successDiv.classList.remove('show');
+                    isNewPasswordValid = false;
+                } else {
+                    messageDiv.textContent = '';
+                    successDiv.textContent = 'Mật khẩu mới hợp lệ';
+                    messageDiv.classList.remove('show');
+                    successDiv.classList.add('show');
+                    isNewPasswordValid = true;
+                }
+                validateConfirmPassword();
+                updateButtonState();
+            });
+
+            // Kiểm tra xác nhận mật khẩu mới (real-time)
+            document.getElementById('confirmNewPassword').addEventListener('input', function() {
+                validateConfirmPassword();
+            });
+
+            // Hàm kiểm tra xác nhận mật khẩu mới
+            function validateConfirmPassword() {
+                const newPassword = document.getElementById('newPassword').value;
+                const confirmPassword = document.getElementById('confirmNewPassword').value;
+                const messageDiv = document.getElementById('confirmPasswordMessage');
+                const successDiv = document.getElementById('confirmPasswordSuccess');
+
+                if (confirmPassword.length === 0) {
+                    messageDiv.textContent = '';
+                    successDiv.textContent = '';
+                    messageDiv.classList.remove('show');
+                    successDiv.classList.remove('show');
+                    isConfirmPasswordValid = false;
+                    updateButtonState();
+                    return;
+                }
+
+                if (newPassword !== confirmPassword) {
+                    messageDiv.textContent = 'Mật khẩu mới và xác nhận không khớp';
+                    successDiv.textContent = '';
+                    messageDiv.classList.add('show');
+                    successDiv.classList.remove('show');
+                    isConfirmPasswordValid = false;
+                } else {
+                    messageDiv.textContent = '';
+                    successDiv.textContent = 'Xác nhận mật khẩu hợp lệ';
+                    messageDiv.classList.remove('show');
+                    successDiv.classList.add('show');
+                    isConfirmPasswordValid = true;
+                }
+                updateButtonState();
+            }
+
+            // Cập nhật trạng thái nút "Thay đổi mật khẩu"
+            function updateButtonState() {
+                const changePasswordBtn = document.getElementById('changePasswordBtn');
+                if (isCurrentPasswordValid && isNewPasswordValid && isConfirmPasswordValid) {
+                    changePasswordBtn.disabled = false;
+                } else {
+                    changePasswordBtn.disabled = true;
+                }
+            }
+
+            // Hiển thị modal xác nhận khi bấm "Thay đổi mật khẩu"
+            document.getElementById('changePasswordBtn').addEventListener('click', function(event) {
+                const modal = new bootstrap.Modal(document.getElementById('confirmChangePasswordModal'));
+                modal.show();
+            });
+
+            // Xử lý xác nhận thay đổi mật khẩu
+            document.getElementById('confirmChangePasswordBtn').addEventListener('click', function() {
+                const form = document.getElementById('changePasswordForm');
+                const changePasswordBtn = document.getElementById('changePasswordBtn');
+                changePasswordBtn.querySelector('span:first-child').textContent = 'Đang thay đổi...';
+                changePasswordBtn.querySelector('.loading-spinner').style.display = 'inline-block';
+                changePasswordBtn.disabled = true;
+                form.submit();
+            });
+
+            // Hiển thị thông báo Toastr khi cập nhật thành công hoặc lỗi
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            const passwordErrorMessage = document.getElementById('passwordError');
+            if (successMessage && successMessage.textContent) {
+                toastr.success(successMessage.textContent);
+            }
+            if (errorMessage && errorMessage.textContent) {
+                toastr.error(errorMessage.textContent);
+            }
+            if (passwordErrorMessage && passwordErrorMessage.textContent) {
+                toastr.error(passwordErrorMessage.textContent);
+            }
+        });
+    </script>
+</body>
+</html>
