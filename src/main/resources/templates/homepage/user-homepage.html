@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="utf-8">
-    <title>KING POOL - User Homepage</title>
+    <title>KING POOL</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="" name="keywords">
     <meta content="" name="description">
@@ -139,7 +139,7 @@
                     <a class="btn btn-square btn-light rounded-circle mx-1" href="#"><i class="fab fa-linkedin-in"></i></a>
                 </div>
                 <div sec:authorize="isAuthenticated()">
-                    <a href="/logout" class="btn btn-secondary rounded-pill py-2 px-4 flex-shrink-0">Đăng xuất</a>
+                    <a href="/homepage" class="btn btn-secondary rounded-pill py-2 px-4 flex-shrink-0">Đăng xuất</a>
                 </div>
             </div>
         </nav>

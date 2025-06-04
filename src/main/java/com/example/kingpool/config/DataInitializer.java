@@ -29,8 +29,8 @@ public class DataInitializer {
         // Tạo tài khoản admin mặc định nếu chưa tồn tại
         if (!userRepository.existsByUsername("admin1")) {
             User admin = new User();
-            admin.setUsername("admin1");
-            admin.setPassword(passwordEncoder.encode("1")); // nhớ mã hóa
+            admin.setUsername("admin1"); 
+            admin.setPassword(passwordEncoder.encode("1")); 
             admin.setName("Admin1");
             admin.setEmail("admin@gmail.com");
             admin.setPhoneNumber("0123456789");
@@ -42,7 +42,5 @@ public class DataInitializer {
             admin.setRole(adminRole);
             userRepository.save(admin);
         }
-
-        // Bạn có thể thêm nhiều tài khoản khác tại đây nếu muốn
     }
 }

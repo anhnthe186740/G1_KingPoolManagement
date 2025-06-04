@@ -2,6 +2,10 @@ package com.example.kingpool.config;
 
 import com.example.kingpool.service.CustomOAuth2UserService;
 import com.example.kingpool.service.CustomUserDetailsService;
+import com.example.kingpool.config.CustomSuccessHandler;
+
+import javax.sql.DataSource;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +19,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 
 @Configuration
 @EnableWebSecurity
@@ -30,16 +35,19 @@ public class SecurityConfig {
     @Autowired
     private CustomSuccessHandler customSuccessHandler;
 
+    @Autowired
+    private DataSource dataSource;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/homepage", "/login", "/register", "/api/auth/register", "/api/auth/login").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
-                .requestMatchers("/api/auth/profile").authenticated()
+                .requestMatchers("/", "/homepage", "/login", "/register", "/forgot", "/forgot/**").permitAll()
+                .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/forgot/resend").permitAll()
                 .requestMatchers("/dashboard", "/admin/**").hasRole("Admin")
-                .requestMatchers("/user-homepage").authenticated()
+                .requestMatchers("/user-homepage", "/api/auth/profile").authenticated()
                 .anyRequest().authenticated())
             .formLogin(form -> form
                 .loginPage("/login")
@@ -50,15 +58,26 @@ public class SecurityConfig {
                 .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                 .successHandler(customSuccessHandler))
             .rememberMe(remember -> remember
-                .key("your-secure-key")
-                .tokenValiditySeconds(7 * 24 * 60 * 60))
+                .tokenRepository(persistentTokenRepository())
+                .tokenValiditySeconds(7 * 24 * 60 * 60) // 7 days
+                .userDetailsService(customUserDetailsService)
+                .key("your-secure-key"))
             .logout(logout -> logout
                 .logoutUrl("/logout")
-                .logoutSuccessUrl("/") // Chuyển hướng về homepage sau khi đăng xuất
+                .logoutSuccessUrl("/login?logout")
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
                 .permitAll());
+
         return http.build();
+    }
+
+    @Bean
+    public PersistentTokenRepository persistentTokenRepository() {
+        JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
+        tokenRepository.setDataSource(dataSource);
+        // tokenRepository.setCreateTableOnStartup(true); // uncomment if first run
+        return tokenRepository;
     }
 
     @Bean

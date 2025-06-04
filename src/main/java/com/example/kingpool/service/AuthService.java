@@ -116,17 +116,37 @@ public class AuthService {
     }
 
     // Thêm phương thức changePassword
-    public void changePassword(User currentUser, String currentPassword, String newPassword, String confirmNewPassword) {
-        if (!passwordEncoder.matches(currentPassword, currentUser.getPassword())) {
-            throw new RuntimeException("Mật khẩu hiện tại không đúng");
-        }
-        if (!newPassword.equals(confirmNewPassword)) {
-            throw new RuntimeException("Mật khẩu mới và xác nhận không khớp");
-        }
-        if (newPassword.length() < 6) {
-            throw new RuntimeException("Mật khẩu mới phải có ít nhất 6 ký tự");
-        }
-        currentUser.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(currentUser);
+public void changePassword(User currentUser, String currentPassword, String newPassword, String confirmNewPassword) {
+    User dbUser = userRepository.findById(currentUser.getUserId())
+        .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+
+    String storedPassword = dbUser.getPassword();
+    System.out.println("⛳ Nhập: " + currentPassword);
+    System.out.println("🔐 DB: " + storedPassword);
+
+    if (storedPassword == null || !storedPassword.startsWith("$2a$")) {
+        throw new RuntimeException("Mật khẩu của tài khoản chưa được mã hóa.");
     }
+
+    boolean matches = passwordEncoder.matches(currentPassword, storedPassword);
+    System.out.println("🎯 matches: " + matches);
+
+    if (!matches) {
+        throw new RuntimeException("Mật khẩu hiện tại không đúng");
+    }
+
+    if (!newPassword.equals(confirmNewPassword)) {
+        throw new RuntimeException("Mật khẩu mới và xác nhận không khớp");
+    }
+
+    if (newPassword.length() < 6) {
+        throw new RuntimeException("Mật khẩu mới phải có ít nhất 6 ký tự");
+    }
+
+    dbUser.setPassword(passwordEncoder.encode(newPassword));
+    userRepository.save(dbUser);
+}
+
+
+
 }
