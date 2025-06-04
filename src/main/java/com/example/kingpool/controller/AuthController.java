@@ -29,9 +29,9 @@ public class AuthController {
             return "redirect:/register";
         }
         if (recaptchaToken == null || recaptchaToken.isEmpty()) {
-        redirectAttributes.addFlashAttribute("error", "Vui lòng xác minh reCAPTCHA.");
-        return "redirect:/register";
-    }
+            redirectAttributes.addFlashAttribute("error", "Vui lòng xác minh reCAPTCHA.");
+            return "redirect:/register";
+        }
         try {
             authService.register(user);
             redirectAttributes.addFlashAttribute("success", "Đăng ký thành công, vui lòng đăng nhập!");
