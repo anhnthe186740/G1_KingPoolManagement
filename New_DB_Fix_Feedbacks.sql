@@ -1,32 +1,39 @@
-CREATE DATABASE KingPool;
-USE KingPool;
 
--- Table Roles: Stores roles (Customer, Coach, Admin)
+
+-- Bước 2: Tạo database với mã hóa hỗ trợ tiếng Việt
+CREATE DATABASE IF NOT EXISTS KingPoolDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE KingPoolDB;
+
+-- Bước 3: Tạo các bảng với tối ưu hóa
+
+-- Table Roles: Lưu trữ vai trò (Customer, Coach, Admin)
 CREATE TABLE Roles (
     role_id INT PRIMARY KEY AUTO_INCREMENT,
-    role_name VARCHAR(50) NOT NULL UNIQUE
-);
+    role_name VARCHAR(50) NOT NULL UNIQUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Table Users: Stores customer and staff information
+-- Table Users: Lưu trữ thông tin khách hàng và nhân viên
 CREATE TABLE Users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL,
     username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255),
+    password VARCHAR(255) NOT NULL, -- Thêm NOT NULL để bảo mật
     email VARCHAR(100) UNIQUE,
     phone_number VARCHAR(15),
     gender ENUM('M', 'F', 'Other'),
     date_of_birth DATE,
     hire_date DATE,
     role_id INT NOT NULL,
-    address VARCHAR(200),
-    image VARCHAR(255),
+    address VARCHAR(255), -- Tăng từ 200 lên 255 để hỗ trợ địa chỉ dài hơn
+    image VARCHAR(255), -- Phù hợp cho URL/đường dẫn
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     status ENUM('Active', 'Inactive') DEFAULT 'Active',
-    FOREIGN KEY (role_id) REFERENCES Roles(role_id)
-);
+    FOREIGN KEY (role_id) REFERENCES Roles(role_id) ON DELETE RESTRICT,
+    INDEX idx_username (username) -- Tăng tốc tìm kiếm theo username
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Table Schedules: Manages ticket sale time slots
+-- Table Schedules: Quản lý khung giờ bán vé
 CREATE TABLE Schedules (
     schedule_id INT PRIMARY KEY AUTO_INCREMENT,
     start_time DATETIME NOT NULL,
@@ -36,10 +43,11 @@ CREATE TABLE Schedules (
     child_price DECIMAL(8, 2) NOT NULL,
     status ENUM('Open', 'Closed', 'SoldOut') DEFAULT 'Open',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT CHK_Schedules_Time CHECK (end_time > start_time)
-);
+    CONSTRAINT CHK_Schedules_Time CHECK (end_time > start_time),
+    INDEX idx_start_time (start_time) -- Tăng tốc tìm kiếm theo thời gian
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Table Booking: Stores pre-booking information
+-- Table Booking: Lưu trữ thông tin đặt vé trước
 CREATE TABLE Booking (
     booking_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -47,42 +55,43 @@ CREATE TABLE Booking (
     booking_type ENUM('Ticket', 'SwimClass') NOT NULL,
     quantity_adult INT DEFAULT 0,
     quantity_child INT DEFAULT 0,
-    total_price DECIMAL(10, 2),
+    total_price DECIMAL(10, 2) NOT NULL, -- Thêm NOT NULL để đảm bảo tính toán
     booking_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     status ENUM('Pending', 'Confirmed', 'Cancelled') DEFAULT 'Pending',
-    FOREIGN KEY (user_id) REFERENCES Users(user_id),
-    FOREIGN KEY (schedule_id) REFERENCES Schedules(schedule_id)
-);
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (schedule_id) REFERENCES Schedules(schedule_id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Table Tickets: Stores ticket information
+-- Table Tickets: Lưu trữ thông tin vé
 CREATE TABLE Tickets (
     ticket_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     schedule_id INT NOT NULL,
     ticket_type ENUM('Adult', 'Child') NOT NULL,
     price DECIMAL(8, 2) NOT NULL,
-    ticket_code VARCHAR(50) UNIQUE,
+    ticket_code VARCHAR(50) NOT NULL UNIQUE, -- Thêm NOT NULL để đảm bảo mã vé duy nhất
     purchase_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     status ENUM('Used', 'Unused') DEFAULT 'Unused',
-    FOREIGN KEY (user_id) REFERENCES Users(user_id),
-    FOREIGN KEY (schedule_id) REFERENCES Schedules(schedule_id)
-);
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (schedule_id) REFERENCES Schedules(schedule_id) ON DELETE CASCADE,
+    INDEX idx_ticket_code (ticket_code) -- Tăng tốc tra cứu mã vé
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Table SwimPackages: Manages swim packages
+-- Table SwimPackages: Quản lý gói học bơi
 CREATE TABLE SwimPackages (
     package_id INT PRIMARY KEY AUTO_INCREMENT,
     package_name VARCHAR(100) NOT NULL,
     description TEXT,
-    total_sessions INT,
-    duration_days INT,
+    total_sessions INT NOT NULL, -- Thêm NOT NULL để đảm bảo logic
+    duration_days INT NOT NULL, -- Thêm NOT NULL
     price DECIMAL(8, 2) NOT NULL,
     coach_id INT,
     status ENUM('Active', 'Inactive') DEFAULT 'Active',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (coach_id) REFERENCES Users(user_id)
-);
+    FOREIGN KEY (coach_id) REFERENCES Users(user_id) ON DELETE SET NULL
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Table PackageSubscriptions: Stores swim package subscriptions
+-- Table PackageSubscriptions: Lưu trữ đăng ký gói học bơi
 CREATE TABLE PackageSubscriptions (
     subscription_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -92,36 +101,37 @@ CREATE TABLE PackageSubscriptions (
     sessions_used INT DEFAULT 0,
     status ENUM('Active', 'Expired', 'Cancelled') DEFAULT 'Active',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES Users(user_id),
-    FOREIGN KEY (package_id) REFERENCES SwimPackages(package_id)
-);
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (package_id) REFERENCES SwimPackages(package_id) ON DELETE CASCADE,
+    CONSTRAINT CHK_Subscription_Dates CHECK (end_date >= start_date)
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Table PackageUsages: Stores swim package usage history
+-- Table PackageUsages: Lưu trữ lịch sử sử dụng gói học bơi
 CREATE TABLE PackageUsages (
     usage_id INT PRIMARY KEY AUTO_INCREMENT,
     subscription_id INT NOT NULL,
     schedule_id INT NOT NULL,
     usage_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     note TEXT,
-    FOREIGN KEY (subscription_id) REFERENCES PackageSubscriptions(subscription_id),
-    FOREIGN KEY (schedule_id) REFERENCES Schedules(schedule_id)
-);
+    FOREIGN KEY (subscription_id) REFERENCES PackageSubscriptions(subscription_id) ON DELETE CASCADE,
+    FOREIGN KEY (schedule_id) REFERENCES Schedules(schedule_id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Table Feedback: Stores customer feedback
+-- Table Feedback: Lưu trữ phản hồi khách hàng
 CREATE TABLE Feedback (
     feedback_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     content TEXT NOT NULL,
-    rating INT,
+    rating INT NOT NULL, -- Thêm NOT NULL để đảm bảo đánh giá
     submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     response TEXT,
     responded_at DATETIME,
     status ENUM('Pending', 'Read', 'Responded') DEFAULT 'Pending',
-    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
     CONSTRAINT CHK_Feedback_Rating CHECK (rating BETWEEN 1 AND 5)
-);
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Table SupportRequests: Stores support requests
+-- Table SupportRequests: Lưu trữ yêu cầu hỗ trợ
 CREATE TABLE SupportRequests (
     request_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -134,10 +144,10 @@ CREATE TABLE SupportRequests (
     response TEXT,
     responded_at DATETIME,
     status ENUM('Pending', 'Read', 'Responded') DEFAULT 'Pending',
-    FOREIGN KEY (user_id) REFERENCES Users(user_id)
-);
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Table SwimClasses: Manages swim classes
+-- Table SwimClasses: Quản lý lớp học bơi
 CREATE TABLE SwimClasses (
     class_id INT PRIMARY KEY AUTO_INCREMENT,
     schedule_id INT NOT NULL,
@@ -146,23 +156,23 @@ CREATE TABLE SwimClasses (
     description TEXT,
     status ENUM('Open', 'Closed', 'Cancelled') DEFAULT 'Open',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (schedule_id) REFERENCES Schedules(schedule_id),
-    FOREIGN KEY (coach_id) REFERENCES Users(user_id)
-);
+    FOREIGN KEY (schedule_id) REFERENCES Schedules(schedule_id) ON DELETE CASCADE,
+    FOREIGN KEY (coach_id) REFERENCES Users(user_id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- Table SwimClassRegistrations: Stores swim class registrations
+-- Table SwimClassRegistrations: Lưu trữ đăng ký lớp học bơi
 CREATE TABLE SwimClassRegistrations (
     registration_id INT PRIMARY KEY AUTO_INCREMENT,
     class_id INT NOT NULL,
     user_id INT NOT NULL,
     registration_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     status ENUM('Pending', 'Confirmed', 'Cancelled') DEFAULT 'Pending',
-    FOREIGN KEY (class_id) REFERENCES SwimClasses(class_id),
-    FOREIGN KEY (user_id) REFERENCES Users(user_id)
-);
+    FOREIGN KEY (class_id) REFERENCES SwimClasses(class_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    UNIQUE (class_id, user_id) -- Ngăn đăng ký trùng
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-
-USE KingPool;
+-- Bước 4: Chèn dữ liệu mẫu
 
 -- Insert into Roles
 INSERT INTO Roles (role_name) VALUES 
@@ -175,10 +185,6 @@ INSERT INTO Users (name, username, password, email, phone_number, gender, date_o
 ('John Doe', 'johndoe', 'hashed_password1', 'john@example.com', '0123456789', 'M', '1990-05-15', NULL, 1, '123 Main St', 'john.jpg', 'Active'),
 ('Jane Smith', 'janesmith', 'hashed_password2', 'jane@example.com', '0987654321', 'F', '1985-08-20', '2023-01-10', 2, '456 Oak Ave', 'jane.jpg', 'Active'),
 ('Admin User', 'admin', 'hashed_password3', 'admin@example.com', '0112233445', 'Other', '1980-03-01', '2022-06-01', 3, '789 Pine Rd', 'admin.jpg', 'Active');
-
--- admin moi them
-INSERT INTO Users (name, username, password, email, phone_number, gender, date_of_birth, hire_date, role_id, address, image, status) VALUES 
-('Admin User', 'admind', 'hashed_password4', 'admind@example.com', '0112233445', 'Other', '1980-03-01', '2022-06-01', 3, '789 Pine Rd', 'admin.jpg', 'Active');
 
 -- Insert into Schedules
 INSERT INTO Schedules (start_time, end_time, max_tickets, adult_price, child_price, status) VALUES 
@@ -206,9 +212,9 @@ INSERT INTO SwimPackages (package_name, description, total_sessions, duration_da
 
 -- Insert into PackageSubscriptions
 INSERT INTO PackageSubscriptions (user_id, package_id, start_date, end_date, sessions_used, status) VALUES 
-(1, 1, '2025-06-01', '2025-06-30', 2, 'Active'),
-(2, 2, '2025-06-01', '2025-07-15', 5, 'Active'),
-(1, 3, '2025-06-01', '2025-06-20', 0, 'Active');
+(1, 1, '2025-06-01 00:00:00', '2025-06-30 23:59:59', 2, 'Active'),
+(2, 2, '2025-06-01 00:00:00', '2025-07-15 23:59:59', 5, 'Active'),
+(1, 3, '2025-06-01 00:00:00', '2025-06-20 23:59:59', 0, 'Active');
 
 -- Insert into PackageUsages
 INSERT INTO PackageUsages (subscription_id, schedule_id, usage_date, note) VALUES 
@@ -239,3 +245,9 @@ INSERT INTO SwimClassRegistrations (class_id, user_id, status) VALUES
 (1, 1, 'Confirmed'),
 (2, 2, 'Pending'),
 (3, 1, 'Confirmed');
+
+
+ALTER TABLE Feedback ADD COLUMN is_visible BOOLEAN DEFAULT TRUE;
+
+UPDATE Feedback SET is_visible = TRUE WHERE feedback_id IN (1, 3);
+UPDATE Feedback SET is_visible = FALSE WHERE feedback_id = 2;
