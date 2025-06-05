@@ -2,7 +2,7 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <title>KingPool - Danh sách người dùng</title>
+    <title>KingPool - Chi tiết người dùng</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -120,15 +120,13 @@
         .text-primary { color: var(--primary) !important; }
         .bg-light { background-color: var(--light) !important; }
         .text-dark { color: var(--dark) !important; }
-        .pagination { justify-content: center; margin-top: 20px; }
-        .page-link { color: var(--primary); border-radius: 5px; }
-        .page-item.active .page-link {
-            background-color: var(--primary);
-            border-color: var(--primary);
-            color: white;
+        .info-row dt { font-weight: 500; color: var(--dark); }
+        .info-row dd { color: #666; }
+        .profile-image {
+            max-width: 100px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
         }
-        .page-item.disabled .page-link { color: #6c757d; }
-        .page-link:hover:not(.disabled) { background-color: #e9ecef; }
     </style>
 </head>
 <body>
@@ -202,56 +200,98 @@
             <div class="container-fluid pt-4 px-4">
                 <div class="bg-light text-center rounded p-4">
                     <div class="d-flex align-items-center justify-content-between mb-4">
-                        <h6 class="mb-0">Danh sách người dùng</h6>
+                        <h6 class="mb-0">Chi tiết người dùng</h6>
                         <div>
-                            <a href="/admin/users/add" class="btn btn-primary btn-sm me-2">Thêm người dùng</a>
-                            <a href="/dashboard" class="btn btn-primary btn-sm">Quay lại</a>
+                            <a th:href="@{/admin/users/edit/{id}(id=${user.userId})}" class="btn btn-primary btn-sm me-2">Sửa</a>
+                            <a href="/admin/users" class="btn btn-primary btn-sm">Quay lại</a>
                         </div>
                     </div>
-                    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-                    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-                    <div class="table-responsive">
-                        <table class="table text-start align-middle table-bordered table-hover mb-0">
-                            <thead>
-                                <tr class="text-dark">
-                                    <th scope="col">ID</th>
-                                    <th scope="col">Tên</th>
-                                    <th scope="col">Username</th>
-                                    <th scope="col">Email</th>
-                                    <th scope="col">Vai trò</th>
-                                    <th scope="col">Trạng thái</th>
-                                    <th scope="col">Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="user : ${users}">
-                                    <td th:text="${user.userId}"></td>
-                                    <td th:text="${user.name}"></td>
-                                    <td th:text="${user.username}"></td>
-                                    <td th:text="${user.email}"></td>
-                                    <td>
-                                        <form th:action="@{/admin/users/change-role/{id}(id=${user.userId})}" method="post">
-                                            <select name="roleName" onchange="this.form.submit()">
-                                                <option th:selected="${user.role.roleName == 'Customer'}" value="Customer">Customer</option>
-                                                <option th:selected="${user.role.roleName == 'Coach'}" value="Coach">Coach</option>
-                                                <option th:selected="${user.role.roleName == 'Admin'}" value="Admin">Admin</option>
-                                            </select>
-                                        </form>
-                                    </td>
-                                    <td th:text="${user.status}"></td>
-                                    <td>
-                                        <a th:href="@{/admin/users/view/{id}(id=${user.userId})}" class="btn btn-sm btn-info me-1"><i class="fa fa-eye"></i></a>
-                                        <a th:href="@{/admin/users/edit/{id}(id=${user.userId})}" class="btn btn-sm btn-primary me-1"><i class="fa fa-edit"></i></a>
-                                        <form th:action="@{/admin/users/delete/{id}(id=${user.userId})}" method="post" style="display:inline;">
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa người dùng này?')"><i class="fa fa-trash"></i></button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                <tr th:if="${#lists.isEmpty(users)}">
-                                    <td colspan="7" class="text-center">Chưa có người dùng nào.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="row mb-4 text-center">
+                        <div class="col-12">
+                            <img th:if="${user.image != null}" th:src="@{'/Uploads/' + ${user.image}}" class="profile-image" alt="Ảnh đại diện">
+                            <img th:if="${user.image == null}" src="/assets/img/default-profile.jpg" class="profile-image" alt="Ảnh đại diện mặc định">
+                            <h5 class="mt-2" th:text="${user.name}"></h5>
+                            <p class="text-muted" th:text="${user.role.roleName}"></p>
+                        </div>
+                    </div>
+                    <div class="row g-0">
+                        <div class="col-5 col-md-3 info-row bg-light">
+                            <dt>ID</dt>
+                        </div>
+                        <div class="col-7 col-md-9 info-row border-start">
+                            <dd th:text="${user.userId}"></dd>
+                        </div>
+                        <div class="col-5 col-md-3 info-row bg-light">
+                            <dt>Họ và tên</dt>
+                        </div>
+                        <div class="col-7 col-md-9 info-row border-start">
+                            <dd th:text="${user.name}"></dd>
+                        </div>
+                        <div class="col-5 col-md-3 info-row bg-light">
+                            <dt>Tên đăng nhập</dt>
+                        </div>
+                        <div class="col-7 col-md-9 info-row border-start">
+                            <dd th:text="${user.username}"></dd>
+                        </div>
+                        <div class="col-5 col-md-3 info-row bg-light">
+                            <dt>Email</dt>
+                        </div>
+                        <div class="col-7 col-md-9 info-row border-start">
+                            <dd th:text="${user.email}"></dd>
+                        </div>
+                        <div class="col-5 col-md-3 info-row bg-light">
+                            <dt>Số điện thoại</dt>
+                        </div>
+                        <div class="col-7 col-md-9 info-row border-start">
+                            <dd th:text="${user.phoneNumber ?: 'Chưa cung cấp'}"></dd>
+                        </div>
+                        <div class="col-5 col-md-3 info-row bg-light">
+                            <dt>Giới tính</dt>
+                        </div>
+                        <div class="col-7 col-md-9 info-row border-start">
+                            <dd th:switch="${user.gender}">
+                                <span th:case="'M'">Nam</span>
+                                <span th:case="'F'">Nữ</span>
+                                <span th:case="'Other'">Khác</span>
+                                <span th:case="*">Chưa cung cấp</span>
+                            </dd>
+                        </div>
+                        <div class="col-5 col-md-3 info-row bg-light">
+                            <dt>Ngày sinh</dt>
+                        </div>
+                        <div class="col-7 col-md-9 info-row border-start">
+                            <dd th:text="${#temporals.format(user.dateOfBirth, 'dd/MM/yyyy') ?: 'Chưa cung cấp'}"></dd>
+                        </div>
+                        <div class="col-5 col-md-3 info-row bg-light">
+                            <dt>Ngày tuyển dụng</dt>
+                        </div>
+                        <div class="col-7 col-md-9 info-row border-start">
+                            <dd th:text="${#temporals.format(user.hireDate, 'dd/MM/yyyy') ?: 'Không áp dụng'}"></dd>
+                        </div>
+                        <div class="col-5 col-md-3 info-row bg-light">
+                            <dt>Địa chỉ</dt>
+                        </div>
+                        <div class="col-7 col-md-9 info-row border-start">
+                            <dd th:text="${user.address ?: 'Chưa cung cấp'}"></dd>
+                        </div>
+                        <div class="col-5 col-md-3 info-row bg-light">
+                            <dt>Vai trò</dt>
+                        </div>
+                        <div class="col-7 col-md-9 info-row border-start">
+                            <dd th:text="${user.role.roleName}"></dd>
+                        </div>
+                        <div class="col-5 col-md-3 info-row bg-light">
+                            <dt>Trạng thái</dt>
+                        </div>
+                        <div class="col-7 col-md-9 info-row border-start">
+                            <dd th:text="${user.status}"></dd>
+                        </div>
+                        <div class="col-5 col-md-3 info-row bg-light">
+                            <dt>Ngày tạo</dt>
+                        </div>
+                        <div class="col-7 col-md-9 info-row border-start">
+                            <dd th:text="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm')}"></dd>
+                        </div>
                     </div>
                 </div>
             </div>

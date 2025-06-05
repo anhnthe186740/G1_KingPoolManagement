@@ -2,7 +2,7 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <title>KingPool - Danh sách người dùng</title>
+    <title>KingPool - Thêm/Sửa người dùng</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -120,15 +120,9 @@
         .text-primary { color: var(--primary) !important; }
         .bg-light { background-color: var(--light) !important; }
         .text-dark { color: var(--dark) !important; }
-        .pagination { justify-content: center; margin-top: 20px; }
-        .page-link { color: var(--primary); border-radius: 5px; }
-        .page-item.active .page-link {
-            background-color: var(--primary);
-            border-color: var(--primary);
-            color: white;
-        }
-        .page-item.disabled .page-link { color: #6c757d; }
-        .page-link:hover:not(.disabled) { background-color: #e9ecef; }
+        .form-label { font-weight: 500; }
+        .form-control, .form-select { border-radius: 5px; }
+        .error-message { color: red; font-size: 0.875em; }
     </style>
 </head>
 <body>
@@ -201,58 +195,87 @@
             </nav>
             <div class="container-fluid pt-4 px-4">
                 <div class="bg-light text-center rounded p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-4">
-                        <h6 class="mb-0">Danh sách người dùng</h6>
-                        <div>
-                            <a href="/admin/users/add" class="btn btn-primary btn-sm me-2">Thêm người dùng</a>
-                            <a href="/dashboard" class="btn btn-primary btn-sm">Quay lại</a>
-                        </div>
-                    </div>
-                    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+                    <h6 class="mb-4" th:text="${user.userId != null} ? 'Sửa người dùng' : 'Thêm người dùng'"></h6>
                     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-                    <div class="table-responsive">
-                        <table class="table text-start align-middle table-bordered table-hover mb-0">
-                            <thead>
-                                <tr class="text-dark">
-                                    <th scope="col">ID</th>
-                                    <th scope="col">Tên</th>
-                                    <th scope="col">Username</th>
-                                    <th scope="col">Email</th>
-                                    <th scope="col">Vai trò</th>
-                                    <th scope="col">Trạng thái</th>
-                                    <th scope="col">Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="user : ${users}">
-                                    <td th:text="${user.userId}"></td>
-                                    <td th:text="${user.name}"></td>
-                                    <td th:text="${user.username}"></td>
-                                    <td th:text="${user.email}"></td>
-                                    <td>
-                                        <form th:action="@{/admin/users/change-role/{id}(id=${user.userId})}" method="post">
-                                            <select name="roleName" onchange="this.form.submit()">
-                                                <option th:selected="${user.role.roleName == 'Customer'}" value="Customer">Customer</option>
-                                                <option th:selected="${user.role.roleName == 'Coach'}" value="Coach">Coach</option>
-                                                <option th:selected="${user.role.roleName == 'Admin'}" value="Admin">Admin</option>
-                                            </select>
-                                        </form>
-                                    </td>
-                                    <td th:text="${user.status}"></td>
-                                    <td>
-                                        <a th:href="@{/admin/users/view/{id}(id=${user.userId})}" class="btn btn-sm btn-info me-1"><i class="fa fa-eye"></i></a>
-                                        <a th:href="@{/admin/users/edit/{id}(id=${user.userId})}" class="btn btn-sm btn-primary me-1"><i class="fa fa-edit"></i></a>
-                                        <form th:action="@{/admin/users/delete/{id}(id=${user.userId})}" method="post" style="display:inline;">
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa người dùng này?')"><i class="fa fa-trash"></i></button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                <tr th:if="${#lists.isEmpty(users)}">
-                                    <td colspan="7" class="text-center">Chưa có người dùng nào.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <form th:action="${user.userId != null} ? @{/admin/users/edit/{id}(id=${user.userId})} : @{/admin/users/add}" th:object="${user}" method="post">
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">Họ và tên</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" th:field="*{name}" required>
+                                <div th:if="${#fields.hasErrors('name')}" class="error-message" th:errors="*{name}"></div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">Tên đăng nhập</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" th:field="*{username}" required>
+                                <div th:if="${#fields.hasErrors('username')}" class="error-message" th:errors="*{username}"></div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">Mật khẩu</label>
+                            <div class="col-sm-10">
+                                <input type="password" class="form-control" th:field="*{password}" th:required="${user.userId == null}">
+                                <div th:if="${#fields.hasErrors('password')}" class="error-message" th:errors="*{password}"></div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">Email</label>
+                            <div class="col-sm-10">
+                                <input type="email" class="form-control" th:field="*{email}" required>
+                                <div th:if="${#fields.hasErrors('email')}" class="error-message" th:errors="*{email}"></div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">Số điện thoại</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" th:field="*{phoneNumber}">
+                                <div th:if="${#fields.hasErrors('phoneNumber')}" class="error-message" th:errors="*{phoneNumber}"></div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">Giới tính</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" th:field="*{gender}">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="M">Nam</option>
+                                    <option value="F">Nữ</option>
+                                    <option value="Other">Khác</option>
+                                </select>
+                                <div th:if="${#fields.hasErrors('gender')}" class="error-message" th:errors="*{gender}"></div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">Ngày sinh</label>
+                            <div class="col-sm-10">
+                                <input type="date" class="form-control" th:field="*{dateOfBirth}">
+                                <div th:if="${#fields.hasErrors('dateOfBirth')}" class="error-message" th:errors="*{dateOfBirth}"></div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">Địa chỉ</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" th:field="*{address}">
+                                <div th:if="${#fields.hasErrors('address')}" class="error-message" th:errors="*{address}"></div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label">Vai trò</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" name="roleName" required>
+                                    <option value="Customer" th:selected="${user.role != null && user.role.roleName == 'Customer'}">Customer</option>
+                                    <option value="Coach" th:selected="${user.role != null && user.role.roleName == 'Coach'}">Coach</option>
+                                    <option value="Admin" th:selected="${user.role != null && user.role.roleName == 'Admin'}">Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-10 offset-sm-2">
+                                <button type="submit" class="btn btn-primary">Lưu</button>
+                                <a th:href="@{/admin/users}" class="btn btn-secondary">Hủy</a>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
             <div class="container-fluid pt-4 px-4">

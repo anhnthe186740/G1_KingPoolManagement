@@ -4,6 +4,8 @@ import com.example.kingpool.entity.Role;
 import com.example.kingpool.entity.User;
 import com.example.kingpool.repository.RoleRepository;
 import com.example.kingpool.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +25,8 @@ import java.util.Optional;
 
 @Service
 public class AuthService {
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
+
     @Autowired
     private UserRepository userRepository;
 
@@ -88,15 +92,15 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    // Thêm phương thức getUserFromAuthentication
     public User getUserFromAuthentication(Authentication authentication) {
         String username = authentication.getName();
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    // Thêm phương thức updateUserProfile
     public void updateUserProfile(User currentUser, User updatedUser, MultipartFile imageFile) throws IOException {
+        logger.info("Updating profile for user: {}", currentUser.getUsername());
+
         currentUser.setName(updatedUser.getName());
         currentUser.setEmail(updatedUser.getEmail());
         currentUser.setPhoneNumber(updatedUser.getPhoneNumber());
@@ -105,48 +109,66 @@ public class AuthService {
         currentUser.setAddress(updatedUser.getAddress());
 
         if (!imageFile.isEmpty()) {
-            String fileName = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
-            Path filePath = Paths.get("uploads/", fileName);
-            Files.createDirectories(filePath.getParent());
-            Files.write(filePath, imageFile.getBytes());
-            currentUser.setImage(fileName);
+            String uploadDir = System.getProperty("user.dir") + "/uploads/";
+            Path uploadPath = Paths.get(uploadDir);
+            logger.info("Checking upload directory: {}", uploadPath.toString());
+            try {
+                if (!Files.exists(uploadPath)) {
+                    logger.info("Upload directory does not exist, creating: {}", uploadPath.toString());
+                    Files.createDirectories(uploadPath);
+                    logger.info("Upload directory created successfully: {}", uploadPath.toString());
+                }
+                String fileName = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
+                Path filePath = uploadPath.resolve(fileName);
+                logger.info("Attempting to save image file: {}", fileName);
+                Files.write(filePath, imageFile.getBytes());
+                logger.info("Image file saved successfully at: {}", filePath.toString());
+                currentUser.setImage(fileName);
+            } catch (IOException e) {
+                logger.error("Failed to save image file: {}", e.getMessage(), e);
+                throw new IOException("Không thể lưu ảnh: " + e.getMessage(), e);
+            }
+        } else {
+            logger.info("No image file provided for upload.");
         }
 
         userRepository.save(currentUser);
+        logger.info("User profile updated successfully for user: {}", currentUser.getUsername());
     }
 
-    // Thêm phương thức changePassword
-public void changePassword(User currentUser, String currentPassword, String newPassword, String confirmNewPassword) {
-    User dbUser = userRepository.findById(currentUser.getUserId())
-        .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
+    public void changePassword(User currentUser, String currentPassword, String newPassword, String confirmNewPassword) {
+        User dbUser = userRepository.findById(currentUser.getUserId())
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng"));
 
-    String storedPassword = dbUser.getPassword();
-    System.out.println("⛳ Nhập: " + currentPassword);
-    System.out.println("🔐 DB: " + storedPassword);
+        String storedPassword = dbUser.getPassword();
+        logger.info("⛳ Nhập: {}", currentPassword);
+        logger.info("🔐 DB: {}", storedPassword);
 
-    if (storedPassword == null || !storedPassword.startsWith("$2a$")) {
-        throw new RuntimeException("Mật khẩu của tài khoản chưa được mã hóa.");
+        if (storedPassword == null || !storedPassword.startsWith("$2a$")) {
+            logger.error("Stored password is not encoded for user: {}", currentUser.getUsername());
+            throw new RuntimeException("Mật khẩu của tài khoản chưa được mã hóa.");
+        }
+
+        boolean matches = passwordEncoder.matches(currentPassword, storedPassword);
+        logger.info("🎯 matches: {}", matches);
+
+        if (!matches) {
+            logger.warn("Current password does not match for user: {}", currentUser.getUsername());
+            throw new RuntimeException("Mật khẩu hiện tại không đúng");
+        }
+
+        if (!newPassword.equals(confirmNewPassword)) {
+            logger.warn("New password and confirmation do not match for user: {}", currentUser.getUsername());
+            throw new RuntimeException("Mật khẩu mới và xác nhận không khớp");
+        }
+
+        if (newPassword.length() < 6) {
+            logger.warn("New password is too short for user: {}", currentUser.getUsername());
+            throw new RuntimeException("Mật khẩu mới phải có ít nhất 6 ký tự");
+        }
+
+        dbUser.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(dbUser);
+        logger.info("Password changed successfully for user: {}", currentUser.getUsername());
     }
-
-    boolean matches = passwordEncoder.matches(currentPassword, storedPassword);
-    System.out.println("🎯 matches: " + matches);
-
-    if (!matches) {
-        throw new RuntimeException("Mật khẩu hiện tại không đúng");
-    }
-
-    if (!newPassword.equals(confirmNewPassword)) {
-        throw new RuntimeException("Mật khẩu mới và xác nhận không khớp");
-    }
-
-    if (newPassword.length() < 6) {
-        throw new RuntimeException("Mật khẩu mới phải có ít nhất 6 ký tự");
-    }
-
-    dbUser.setPassword(passwordEncoder.encode(newPassword));
-    userRepository.save(dbUser);
-}
-
-
-
 }
