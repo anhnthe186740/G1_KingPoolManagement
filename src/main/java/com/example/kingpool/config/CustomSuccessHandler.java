@@ -25,17 +25,28 @@ public class CustomSuccessHandler implements AuthenticationSuccessHandler {
                                         Authentication authentication)
             throws IOException, ServletException {
 
-        String username = authentication.getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user;
+
+        if (authentication.getPrincipal() instanceof org.springframework.security.oauth2.core.user.OAuth2User oauth2User) {
+            String emailAttr = oauth2User.getAttribute("email");
+            String fallbackAttr = oauth2User.getAttribute("login");
+            String email = emailAttr != null ? emailAttr : fallbackAttr;
+
+            user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("OAuth2 user not found: " + email));
+        } else {
+            String username = authentication.getName();
+            user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found: " + username));
+        }
 
         HttpSession session = request.getSession();
         session.setAttribute("username", user.getUsername());
         session.setAttribute("name", user.getName());
         session.setAttribute("role", user.getRole().getRoleName());
 
-        // Chuyển hướng: Admin vào /dashboard, còn lại (Customer, Coach) vào /user-homepage
-        String redirectUrl = "Admin".equals(user.getRole().getRoleName()) ? "/dashboard" : "/user-homepage";
+        String redirectUrl = "Admin".equalsIgnoreCase(user.getRole().getRoleName()) ? "/dashboard" : "/user-homepage";
         response.sendRedirect(redirectUrl);
     }
 }
+

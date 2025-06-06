@@ -4,7 +4,6 @@ import com.example.kingpool.entity.Role;
 import com.example.kingpool.entity.User;
 import com.example.kingpool.repository.RoleRepository;
 import com.example.kingpool.repository.UserRepository;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -30,61 +29,59 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private RoleRepository roleRepository;
 
     @Override
-public OAuth2User loadUser(OAuth2UserRequest userRequest)
-        throws OAuth2AuthenticationException {
+    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+        String registrationId = userRequest.getClientRegistration().getRegistrationId(); // "google", "github"
+        OAuth2User oauthUser = super.loadUser(userRequest);
+        Map<String, Object> attributes = oauthUser.getAttributes();
 
-    String registrationId = userRequest.getClientRegistration().getRegistrationId(); // "google", "github"
-    OAuth2User oauthUser = super.loadUser(userRequest);
-    Map<String, Object> attributes = oauthUser.getAttributes();
+        System.out.println("OAuth2 attributes: " + attributes);
 
-    String email = (String) attributes.get("email");
-    String name = (String) attributes.get("name");
-    String username = email;
+        String email = (String) attributes.get("email");
+        String login = (String) attributes.get("login"); // fallback for GitHub
+        String name = (String) attributes.get("name");
 
-    if ("github".equals(registrationId)) {
-        username = (String) attributes.get("login");
-        if (name == null)
-            name = username;
+        String username = email != null ? email : login;
+        if (username == null) {
+            throw new OAuth2AuthenticationException("Không lấy được email hoặc login từ OAuth2 provider.");
+        }
+
+        Role role = roleRepository.findByRoleName("USER")
+                .orElseGet(() -> {
+                    Role newRole = new Role();
+                    newRole.setRoleName("USER");
+                    return roleRepository.save(newRole);
+                });
+
+        User user;
+        Optional<User> existingUser = userRepository.findByEmail(username);
+        if (existingUser.isEmpty()) {
+            user = new User();
+            user.setEmail(username);
+            user.setUsername(username);
+            user.setName(name != null ? name : "No Name");
+            user.setPassword(null);
+            user.setPhoneNumber(null);
+            user.setGender(null);
+            user.setDateOfBirth(null);
+            user.setHireDate(LocalDate.now());
+            user.setCreatedAt(LocalDateTime.now());
+            user.setStatus("ACTIVE");
+            user.setRole(role);
+
+            userRepository.save(user);
+            System.out.println("User created: " + username);
+        } else {
+            user = existingUser.get();
+            user.setName(name);
+            user.setRole(role);
+            userRepository.save(user);
+            System.out.println("User updated: " + username);
+        }
+
+        return new DefaultOAuth2User(
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.getRoleName())),
+                attributes,
+                registrationId.equals("github") ? "login" : "email"
+        );
     }
-
-    // Lấy hoặc tạo role USER
-    Role role = roleRepository.findByRoleName("USER")
-            .orElseGet(() -> {
-                Role newRole = new Role();
-                newRole.setRoleName("USER");
-                return roleRepository.save(newRole);
-            });
-
-    // Tạo hoặc cập nhật user
-    User user;
-    Optional<User> existingUser = userRepository.findByEmail(email);
-    if (existingUser.isEmpty()) {
-        user = new User();
-        user.setEmail(email);
-        user.setUsername(username);
-        user.setName(name != null ? name : "No Name");
-        user.setPassword(null); // không có password
-        user.setPhoneNumber(null);
-        user.setGender(null);
-        user.setDateOfBirth(null);
-        user.setHireDate(LocalDate.now());
-        user.setCreatedAt(LocalDateTime.now());
-        user.setStatus("ACTIVE");
-        user.setRole(role); // ✅ Bắt buộc
-
-        userRepository.save(user);
-    } else {
-        user = existingUser.get();
-        user.setName(name);
-        user.setRole(role); // để đảm bảo luôn có role nếu DB cũ thiếu
-        userRepository.save(user);
-    }
-
-    return new DefaultOAuth2User(
-            Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.getRoleName())),
-            oauthUser.getAttributes(),
-            registrationId.equals("github") ? "login" : "email"
-    );
-}
-
 }
