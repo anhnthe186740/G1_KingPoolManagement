@@ -16,17 +16,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 @RequestMapping("/admin")
 public class FeedbackController {
-  @Autowired
+    @Autowired
     private FeedbackService feedbackService;
 
     @GetMapping("/feedbacks")
-    //@PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('Admin')")
     public String viewFeedbacks(@RequestParam(defaultValue = "0") int page, Model model) {
         Pageable pageable = PageRequest.of(page, 5);
         Page<Feedback> feedbackPage = feedbackService.findAll(pageable);
         model.addAttribute("feedbacks", feedbackPage.getContent());
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", feedbackPage.getTotalPages());
-        return "feedback/feedbacks"; // Ánh xạ tới src/main/resources/templates/feedback/feedbacks.html
+        return "feedback/feedbacks";
     }
 }

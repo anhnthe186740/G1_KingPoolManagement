@@ -34,8 +34,13 @@ public class ProfileController {
 
         User user = authService.getUserFromAuthentication(authentication);
         logger.info("Viewing profile for user: {}", user.getUsername());
+
         model.addAttribute("user", user);
-        return "profile/view";
+        // Xác định đường dẫn "Quay lại" dựa trên vai trò
+        String backUrl = "Admin".equals(user.getRole().getRoleName()) ? "/dashboard" : "/homepage/user-homepage";
+        model.addAttribute("backUrl", backUrl);
+
+        return "profile/view"; // View chung cho cả admin và user
     }
 
     @GetMapping("/edit")
@@ -47,7 +52,12 @@ public class ProfileController {
         User user = authService.getUserFromAuthentication(authentication);
         logger.info("Editing profile for user: {}", user.getUsername());
         model.addAttribute("user", user);
-        return "profile/edit";
+
+        // Xác định đường dẫn "Quay lại" dựa trên vai trò
+        String backUrl = "Admin".equals(user.getRole().getRoleName()) ? "/dashboard" : "/homepage/user-homepage";
+        model.addAttribute("backUrl", backUrl);
+
+        return "profile/edit"; // View chỉnh sửa chung cho cả admin và user
     }
 
     @PostMapping("/edit")
@@ -105,6 +115,10 @@ public class ProfileController {
         if (result.hasErrors()) {
             logger.warn("Validation errors: {}", result.getAllErrors());
             model.addAttribute("user", updatedUser);
+            // Thêm lại backUrl khi có lỗi
+            User user = authService.getUserFromAuthentication(authentication);
+            String backUrl = "Admin".equals(user.getRole().getRoleName()) ? "/dashboard" : "/homepage/user-homepage";
+            model.addAttribute("backUrl", backUrl);
             return "profile/edit";
         }
 

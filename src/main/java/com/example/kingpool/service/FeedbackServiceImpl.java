@@ -102,4 +102,17 @@ public class FeedbackServiceImpl implements FeedbackService {
 
         return new PageImpl<>(feedbacks, pageable, total);
     }
+
+    @Override
+    public List<Feedback> getAllFeedbacks() {
+        logger.debug("Fetching all feedbacks");
+        try {
+            List<Feedback> feedbacks = feedbackRepository.findAll();
+            logger.info("Found {} feedbacks", feedbacks.size());
+            return feedbacks;
+        } catch (Exception e) {
+            logger.error("Error fetching all feedbacks: {}", e.getMessage());
+            throw new RuntimeException("Không thể lấy danh sách tất cả phản hồi: " + e.getMessage());
+        }
+    }
 }

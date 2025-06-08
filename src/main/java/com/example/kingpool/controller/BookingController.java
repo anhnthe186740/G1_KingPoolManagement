@@ -50,13 +50,12 @@ public class BookingController {
         }
     }
 
-    // New mapping for /freestyle-booking
     @GetMapping("/freestyle-booking")
     public String showFreestyleBookingPage(Model model) {
         logger.debug("Accessing freestyle booking page");
         try {
             model.addAttribute("schedules", bookingService.getAvailableSchedules());
-            return "booking/book-ticket"; // Reuse the same template as /booking
+            return "booking/book-ticket";
         } catch (Exception e) {
             logger.error("Error loading freestyle booking page: {}", e.getMessage());
             model.addAttribute("error", "Lỗi khi tải trang đặt lịch bơi tự do");
@@ -110,18 +109,10 @@ public class BookingController {
             String bookingSql = "SELECT b.booking_id, b.user_id, b.schedule_id, b.quantity_adult, b.quantity_child, " +
                                "b.total_price, b.status, u.name " +
                                "FROM Booking b JOIN Users u ON b.user_id = u.user_id WHERE b.booking_id = ?";
-            Map<String, Object> bookingData;
-            try {
-                bookingData = jdbcTemplate.queryForMap(bookingSql, bookingId);
-            } catch (EmptyResultDataAccessException e) {
-                logger.error("Booking with ID {} not found", bookingId);
-                redirectAttributes.addFlashAttribute("error", "Không tìm thấy thông tin đặt vé.");
-                return "redirect:/booking/freestyle-booking";
-            }
+            Map<String, Object> bookingData = jdbcTemplate.queryForMap(bookingSql, bookingId);
 
-            Long bookingUserId = bookingData.get("user_id") instanceof Number ?
-                    ((Number) bookingData.get("user_id")).longValue() : null;
-            if (bookingUserId == null || !bookingUserId.equals(currentUser.getUserId().longValue())) {
+            Long bookingUserId = ((Number) bookingData.get("user_id")).longValue();
+            if (!bookingUserId.equals(currentUser.getUserId().longValue())) {
                 logger.warn("User {} attempted to access booking {} belonging to another user", 
                             currentUser.getUsername(), bookingId);
                 redirectAttributes.addFlashAttribute("error", "Bạn không có quyền xem thông tin đặt vé này.");
@@ -129,24 +120,14 @@ public class BookingController {
             }
 
             String scheduleSql = "SELECT start_time, end_time FROM Schedules WHERE schedule_id = ?";
-            Map<String, Object> schedule;
-            try {
-                schedule = jdbcTemplate.queryForMap(scheduleSql, bookingData.get("schedule_id"));
-            } catch (EmptyResultDataAccessException e) {
-                logger.error("Schedule with ID {} not found", bookingData.get("schedule_id"));
-                redirectAttributes.addFlashAttribute("error", "Không tìm thấy thông tin khung giờ.");
-                return "redirect:/booking/freestyle-booking";
-            }
+            Map<String, Object> schedule = jdbcTemplate.queryForMap(scheduleSql, bookingData.get("schedule_id"));
 
             Booking booking = new Booking();
             booking.setBookingId(((Number) bookingData.get("booking_id")).intValue());
             booking.setScheduleId(((Number) bookingData.get("schedule_id")).intValue());
-            booking.setQuantityAdult(bookingData.get("quantity_adult") != null ? 
-                                    ((Number) bookingData.get("quantity_adult")).intValue() : 0);
-            booking.setQuantityChild(bookingData.get("quantity_child") != null ? 
-                                    ((Number) bookingData.get("quantity_child")).intValue() : 0);
-            booking.setTotalPrice(bookingData.get("total_price") != null ? 
-                                 ((Number) bookingData.get("total_price")).doubleValue() : 0.0);
+            booking.setQuantityAdult(((Number) bookingData.get("quantity_adult")).intValue());
+            booking.setQuantityChild(((Number) bookingData.get("quantity_child")).intValue());
+            booking.setTotalPrice(((Number) bookingData.get("total_price")).doubleValue());
             booking.setStatus((String) bookingData.get("status"));
 
             User user = new User();
@@ -157,6 +138,10 @@ public class BookingController {
             model.addAttribute("booking", booking);
             model.addAttribute("schedule", schedule);
             return "booking/confirmation";
+        } catch (EmptyResultDataAccessException e) {
+            logger.error("Booking with ID {} not found", bookingId);
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy thông tin đặt vé.");
+            return "redirect:/booking/freestyle-booking";
         } catch (Exception e) {
             logger.error("Error processing confirmation for bookingId {}: {}", bookingId, e.getMessage());
             redirectAttributes.addFlashAttribute("error", "Lỗi hệ thống khi truy xuất thông tin đặt vé.");

@@ -99,7 +99,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <div class="navbar-nav ms-auto">
                     <a class="nav-link" href="/homepage">Trang chủ</a>
-                    <a class="nav-link" href="/booking">Đặt vé</a>
+                    <a class="nav-link" href="/booking/freestyle-booking">Đặt vé</a>
                     <a class="nav-link" href="/logout">Đăng xuất</a>
                 </div>
             </div>
@@ -122,9 +122,9 @@
             <div class="ticket-body">
                 <div class="ticket-info">
                     <p><strong>Mã đặt vé:</strong> 
-                       <span th:text="${booking?.bookingId} ?: 'Không xác định'"></span></p>
+                       <span th:text="${booking != null} ? ${booking.bookingId} : 'Không xác định'"></span></p>
                     <p><strong>Người đặt:</strong> 
-                       <span th:text="${booking?.user?.name} ?: 'Không xác định'"></span></p>
+                       <span th:text="${booking != null && booking.user != null} ? ${booking.user.name} : 'Không xác định'"></span></p>
                     <p><strong>Khung giờ:</strong> 
                        <span th:if="${schedule != null && schedule.start_time != null && schedule.end_time != null}"
                              th:text="${#temporals.format(schedule.start_time, 'dd/MM/yyyy HH:mm')} + ' - ' + 
@@ -135,20 +135,20 @@
                            Không xác định
                        </span></p>
                     <p><strong>Số vé người lớn:</strong> 
-                       <span th:text="${booking?.quantityAdult} ?: '0'"></span></p>
+                       <span th:text="${booking != null} ? ${booking.quantityAdult} : '0'"></span></p>
                     <p><strong>Số vé trẻ em:</strong> 
-                       <span th:text="${booking?.quantityChild} ?: '0'"></span></p>
+                       <span th:text="${booking != null} ? ${booking.quantityChild} : '0'"></span></p>
                     <p><strong>Tổng giá:</strong> 
                        <span th:text="${formattedPrice} + ' VNĐ'"></span></p>
                     <p><strong>Trạng thái:</strong> 
-                       <span th:text="${booking?.status} ?: 'Không xác định'"></span></p>
+                       <span th:text="${booking != null} ? ${booking.status} : 'Không xác định'"></span></p>
                 </div>
             </div>
         </div>
 
         <!-- Nút hành động -->
         <div class="text-center mt-4">
-            <a href="/booking" class="btn btn-action">Đặt vé khác</a>
+            <a href="/booking/freestyle-booking" class="btn btn-action">Đặt vé khác</a>
             <a href="/user-homepage" class="btn btn-action">Trang chủ</a>
         </div>
     </div>

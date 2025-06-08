@@ -200,4 +200,16 @@ public class BookingService {
             }
         }
     }
+
+    public List<Booking> getAllBookings() {
+        logger.debug("Fetching all bookings");
+        try {
+            List<Booking> bookings = bookingRepository.findAll();
+            logger.info("Found {} bookings", bookings.size());
+            return bookings;
+        } catch (Exception e) {
+            logger.error("Error fetching all bookings: {}", e.getMessage());
+            throw new RuntimeException("Không thể lấy danh sách tất cả vé đặt: " + e.getMessage());
+        }
+    }
 }

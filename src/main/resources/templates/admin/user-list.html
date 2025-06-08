@@ -129,6 +129,13 @@
         }
         .page-item.disabled .page-link { color: #6c757d; }
         .page-link:hover:not(.disabled) { background-color: #e9ecef; }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
@@ -145,12 +152,12 @@
                 </a>
                 <div class="d-flex align-items-center ms-4 mb-4">
                     <div class="position-relative">
-                        <img class="rounded-circle" th:src="@{'/Uploads/' + ${session.image} ?: '/assets/img/default-profile.jpg'}" alt="" style="width: 40px; height: 40px;">
+                        <img class="rounded-circle" th:src="@{${session.user != null && session.user.image != null} ? ('/uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}" alt="Ảnh đại diện" style="width: 40px; height: 40px;">
                         <div class="bg-success rounded-circle border border-2 border-white position-absolute end-0 bottom-0 p-1"></div>
                     </div>
                     <div class="ms-3">
-                        <h6 class="mb-0" th:text="${session.name} ?: 'Admin'"></h6>
-                        <span th:text="${session.role} ?: 'Admin'"></span>
+                        <h6 class="mb-0" th:text="${session.user != null ? session.user.name : 'Admin'}"></h6>
+                        <span th:text="${session.user != null && session.user.role != null ? session.user.role.roleName : 'Admin'}"></span>
                     </div>
                 </div>
                 <div class="navbar-nav w-100">
@@ -158,6 +165,8 @@
                     <a href="/admin/users" class="nav-item nav-link active"><i class="fa fa-users me-2"></i>Quản lý người dùng</a>
                     <a href="/admin/coaches" class="nav-item nav-link"><i class="fa fa-user-tie me-2"></i>Quản lý huấn luyện viên</a>
                     <a href="/admin/feedbacks" class="nav-item nav-link"><i class="fa fa-comments me-2"></i>Quản lý phản hồi</a>
+                    <a href="/profile" class="nav-item nav-link"><i class="fa fa-user me-2"></i>Hồ sơ</a>
+                    <a href="/logout" class="nav-item nav-link"><i class="fa fa-sign-out-alt me-2"></i>Đăng xuất</a>
                 </div>
             </nav>
         </div>
@@ -189,8 +198,8 @@
                     </div>
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                            <img class="rounded-circle me-lg-2" th:src="@{'/Uploads/' + ${session.image} ?: '/assets/img/default-profile.jpg'}" alt="" style="width: 40px; height: 40px;">
-                            <span class="d-none d-lg-inline-flex" th:text="${session.name} ?: 'Admin'"></span>
+                            <img class="rounded-circle me-lg-2" th:src="@{${session.user != null && session.user.image != null} ? ('/uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}" alt="Ảnh đại diện" style="width: 40px; height: 40px;">
+                            <span class="d-none d-lg-inline-flex" th:text="${session.user != null ? session.user.name : 'Admin'}"></span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
                             <a href="/profile" class="dropdown-item">Hồ sơ</a>
@@ -215,6 +224,7 @@
                             <thead>
                                 <tr class="text-dark">
                                     <th scope="col">ID</th>
+                                    <th scope="col">Ảnh đại diện</th>
                                     <th scope="col">Tên</th>
                                     <th scope="col">Username</th>
                                     <th scope="col">Email</th>
@@ -226,15 +236,18 @@
                             <tbody>
                                 <tr th:each="user : ${users}">
                                     <td th:text="${user.userId}"></td>
+                                    <td>
+                                        <img th:src="@{${user.image != null} ? ('/uploads/' + ${user.image}) : '/assets/img/default-profile.jpg'}" class="user-avatar" alt="Ảnh đại diện">
+                                    </td>
                                     <td th:text="${user.name}"></td>
                                     <td th:text="${user.username}"></td>
                                     <td th:text="${user.email}"></td>
                                     <td>
                                         <form th:action="@{/admin/users/change-role/{id}(id=${user.userId})}" method="post">
                                             <select name="roleName" onchange="this.form.submit()">
-                                                <option th:selected="${user.role.roleName == 'Customer'}" value="Customer">Customer</option>
-                                                <option th:selected="${user.role.roleName == 'Coach'}" value="Coach">Coach</option>
-                                                <option th:selected="${user.role.roleName == 'Admin'}" value="Admin">Admin</option>
+                                                <option th:selected="${user.role != null && user.role.roleName == 'Customer'}" value="Customer">Customer</option>
+                                                <option th:selected="${user.role != null && user.role.roleName == 'Coach'}" value="Coach">Coach</option>
+                                                <option th:selected="${user.role != null && user.role.roleName == 'Admin'}" value="Admin">Admin</option>
                                             </select>
                                         </form>
                                     </td>
@@ -248,7 +261,7 @@
                                     </td>
                                 </tr>
                                 <tr th:if="${#lists.isEmpty(users)}">
-                                    <td colspan="7" class="text-center">Chưa có người dùng nào.</td>
+                                    <td colspan="8" class="text-center">Chưa có người dùng nào.</td>
                                 </tr>
                             </tbody>
                         </table>
