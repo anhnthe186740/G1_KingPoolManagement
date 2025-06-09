@@ -19,8 +19,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+
 
 @Configuration
 @EnableWebSecurity
@@ -57,28 +56,16 @@ public class SecurityConfig {
                 .loginPage("/login")
                 .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                 .successHandler(customSuccessHandler))
-            .rememberMe(remember -> remember
-                .tokenRepository(persistentTokenRepository())
-                .tokenValiditySeconds(7 * 24 * 60 * 60) // 7 days
-                .userDetailsService(customUserDetailsService)
-                .key("your-secure-key"))
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
+                .deleteCookies("JSESSIONID", "remember-me")
                 .permitAll());
 
         return http.build();
     }
 
-    @Bean
-    public PersistentTokenRepository persistentTokenRepository() {
-        JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
-        tokenRepository.setDataSource(dataSource);
-        // tokenRepository.setCreateTableOnStartup(true); // uncomment if first run
-        return tokenRepository;
-    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
