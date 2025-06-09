@@ -14,6 +14,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
+
 @Controller
 public class DashboardController {
 
@@ -43,15 +47,41 @@ public class DashboardController {
 
         session.setAttribute("user", user);
 
+        // Dữ liệu cơ bản
         long totalUsers = userService.getAllUsers().size();
         long totalCoaches = userService.getAllCoaches().size();
         long totalBookings = bookingService.getAllBookings().size();
         long totalFeedbacks = feedbackService.getAllFeedbacks().size();
 
+        // Dữ liệu thống kê theo ngày
+        LocalDate today = LocalDate.now();
+        Map<String, Long> dailyStats = new HashMap<>();
+        try {
+            dailyStats.put("usersToday", userService.getUsersByDate(today) != null ? (long) userService.getUsersByDate(today).size() : 0L);
+            dailyStats.put("bookingsToday", bookingService.getBookingsByDate(today) != null ? (long) bookingService.getBookingsByDate(today).size() : 0L);
+            dailyStats.put("coachesToday", userService.getCoachesByDate(today) != null ? (long) userService.getCoachesByDate(today).size() : 0L);
+            dailyStats.put("feedbacksToday", feedbackService.getFeedbacksByDate(today) != null ? (long) feedbackService.getFeedbacksByDate(today).size() : 0L);
+        } catch (Exception e) {
+            logger.error("Error fetching daily statistics: {}", e.getMessage(), e);
+            dailyStats.put("usersToday", 0L);
+            dailyStats.put("bookingsToday", 0L);
+            dailyStats.put("coachesToday", 0L);
+            dailyStats.put("feedbacksToday", 0L);
+        }
+
+        // Dữ liệu doanh thu
+        Map<String, Double> revenueStats = new HashMap<>();
+        revenueStats.put("dailyRevenue", bookingService.getRevenueByDate(today));
+        revenueStats.put("monthlyRevenue", bookingService.getRevenueByMonth(today.getMonthValue(), today.getYear()));
+        revenueStats.put("quarterlyRevenue", bookingService.getRevenueByQuarter((today.getMonthValue() - 1) / 3 + 1, today.getYear()));
+        revenueStats.put("yearlyRevenue", bookingService.getRevenueByYear(today.getYear()));
+
         model.addAttribute("totalUsers", totalUsers);
-        model.addAttribute("totalCoaches", totalCoaches);
         model.addAttribute("totalBookings", totalBookings);
+        model.addAttribute("totalCoaches", totalCoaches);
         model.addAttribute("totalFeedbacks", totalFeedbacks);
+        model.addAttribute("dailyStats", dailyStats);
+        model.addAttribute("revenueStats", revenueStats);
 
         return "dashboard/dashboard";
     }

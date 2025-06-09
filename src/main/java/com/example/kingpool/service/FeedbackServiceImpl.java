@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -38,10 +39,8 @@ public class FeedbackServiceImpl implements FeedbackService {
         int pageSize = pageable.getPageSize();
         int offset = (int) pageable.getOffset();
 
-        // Lấy dữ liệu phản hồi với thông tin người dùng
         List<Map<String, Object>> feedbackData = jdbcTemplate.queryForList(sql, pageSize, offset);
 
-        // Chuyển dữ liệu thành danh sách Feedback entity
         List<Feedback> feedbacks = feedbackData.stream().map(data -> {
             Feedback feedback = new Feedback();
             feedback.setFeedbackId(((Number) data.get("feedback_id")).longValue());
@@ -49,7 +48,6 @@ public class FeedbackServiceImpl implements FeedbackService {
             feedback.setContent(data.get("content") != null ? String.valueOf(data.get("content")) : null);
             feedback.setRating(((Number) data.get("rating")).intValue());
 
-            // Kiểm tra và chuyển đổi submitted_at
             Object submittedAtObj = data.get("submitted_at");
             if (submittedAtObj instanceof Timestamp) {
                 feedback.setSubmittedAt(((Timestamp) submittedAtObj).toLocalDateTime());
@@ -58,7 +56,6 @@ public class FeedbackServiceImpl implements FeedbackService {
                 feedback.setSubmittedAt(null);
             }
 
-            // Xử lý response
             Object responseObj = data.get("response");
             if (responseObj != null) {
                 feedback.setResponse(String.valueOf(responseObj));
@@ -67,7 +64,6 @@ public class FeedbackServiceImpl implements FeedbackService {
                 logger.debug("response is null for feedback_id: {}", data.get("feedback_id"));
             }
 
-            // Kiểm tra và chuyển đổi responded_at
             Object respondedAtObj = data.get("responded_at");
             if (respondedAtObj instanceof Timestamp) {
                 feedback.setRespondedAt(((Timestamp) respondedAtObj).toLocalDateTime());
@@ -78,7 +74,6 @@ public class FeedbackServiceImpl implements FeedbackService {
                 feedback.setRespondedAt(null);
             }
 
-            // Xử lý status
             Object statusObj = data.get("status");
             if (statusObj != null) {
                 feedback.setStatus(String.valueOf(statusObj));
@@ -96,7 +91,6 @@ public class FeedbackServiceImpl implements FeedbackService {
             return feedback;
         }).toList();
 
-        // Đếm tổng số phản hồi để tính phân trang
         String countSql = "SELECT COUNT(*) FROM Feedback";
         long total = jdbcTemplate.queryForObject(countSql, Long.class);
 
@@ -113,6 +107,33 @@ public class FeedbackServiceImpl implements FeedbackService {
         } catch (Exception e) {
             logger.error("Error fetching all feedbacks: {}", e.getMessage());
             throw new RuntimeException("Không thể lấy danh sách tất cả phản hồi: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<Feedback> getFeedbacksByDate(LocalDate date) {
+        logger.debug("Fetching feedbacks by date: {}", date);
+        String sql = "SELECT * FROM Feedback WHERE DATE(submitted_at) = ?";
+        try {
+            List<Feedback> feedbacks = jdbcTemplate.query(sql, new Object[]{date}, (rs, rowNum) -> {
+                Feedback feedback = new Feedback();
+                feedback.setFeedbackId(rs.getLong("feedback_id"));
+                feedback.setUserId(rs.getInt("user_id"));
+                feedback.setContent(rs.getString("content"));
+                feedback.setRating(rs.getInt("rating"));
+                feedback.setSubmittedAt(rs.getTimestamp("submitted_at") != null ? 
+                    rs.getTimestamp("submitted_at").toLocalDateTime() : null);
+                feedback.setResponse(rs.getString("response"));
+                feedback.setRespondedAt(rs.getTimestamp("responded_at") != null ? 
+                    rs.getTimestamp("responded_at").toLocalDateTime() : null);
+                feedback.setStatus(rs.getString("status"));
+                feedback.setIsVisible(rs.getBoolean("is_visible"));
+                return feedback;
+            });
+            return feedbacks;
+        } catch (Exception e) {
+            logger.error("Error fetching feedbacks by date: {}", e.getMessage());
+            return List.of();
         }
     }
 }

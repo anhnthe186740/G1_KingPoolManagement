@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -210,6 +211,78 @@ public class BookingService {
         } catch (Exception e) {
             logger.error("Error fetching all bookings: {}", e.getMessage());
             throw new RuntimeException("Không thể lấy danh sách tất cả vé đặt: " + e.getMessage());
+        }
+    }
+
+    public List<Booking> getBookingsByDate(LocalDate date) {
+        logger.debug("Fetching bookings by date: {}", date);
+        String sql = "SELECT * FROM Booking WHERE DATE(booking_date) = ?";
+        try {
+            List<Booking> bookings = jdbcTemplate.query(sql, new Object[]{date}, (rs, rowNum) -> {
+                Booking booking = new Booking();
+                booking.setBookingId(rs.getInt("booking_id"));
+                booking.setScheduleId(rs.getInt("schedule_id"));
+                booking.setQuantityAdult(rs.getInt("quantity_adult"));
+                booking.setQuantityChild(rs.getInt("quantity_child"));
+                booking.setTotalPrice(rs.getDouble("total_price"));
+                booking.setBookingDate(rs.getTimestamp("booking_date").toLocalDateTime());
+                booking.setStatus(rs.getString("status"));
+                return booking;
+            });
+            return bookings;
+        } catch (Exception e) {
+            logger.error("Error fetching bookings by date: {}", e.getMessage());
+            return List.of();
+        }
+    }
+
+    public double getRevenueByDate(LocalDate date) {
+        logger.debug("Calculating revenue by date: {}", date);
+        String sql = "SELECT SUM(total_price) FROM Booking WHERE DATE(booking_date) = ? AND status = 'Confirmed'";
+        try {
+            Double revenue = jdbcTemplate.queryForObject(sql, new Object[]{date}, Double.class);
+            return revenue != null ? revenue : 0.0;
+        } catch (Exception e) {
+            logger.error("Error calculating revenue by date: {}", e.getMessage());
+            return 0.0;
+        }
+    }
+
+    public double getRevenueByMonth(int month, int year) {
+        logger.debug("Calculating revenue by month: {}/{}", month, year);
+        String sql = "SELECT SUM(total_price) FROM Booking WHERE MONTH(booking_date) = ? AND YEAR(booking_date) = ? AND status = 'Confirmed'";
+        try {
+            Double revenue = jdbcTemplate.queryForObject(sql, new Object[]{month, year}, Double.class);
+            return revenue != null ? revenue : 0.0;
+        } catch (Exception e) {
+            logger.error("Error calculating revenue by month: {}", e.getMessage());
+            return 0.0;
+        }
+    }
+
+    public double getRevenueByQuarter(int quarter, int year) {
+        logger.debug("Calculating revenue by quarter: {}/{}", quarter, year);
+        int startMonth = (quarter - 1) * 3 + 1;
+        int endMonth = startMonth + 2;
+        String sql = "SELECT SUM(total_price) FROM Booking WHERE MONTH(booking_date) BETWEEN ? AND ? AND YEAR(booking_date) = ? AND status = 'Confirmed'";
+        try {
+            Double revenue = jdbcTemplate.queryForObject(sql, new Object[]{startMonth, endMonth, year}, Double.class);
+            return revenue != null ? revenue : 0.0;
+        } catch (Exception e) {
+            logger.error("Error calculating revenue by quarter: {}", e.getMessage());
+            return 0.0;
+        }
+    }
+
+    public double getRevenueByYear(int year) {
+        logger.debug("Calculating revenue by year: {}", year);
+        String sql = "SELECT SUM(total_price) FROM Booking WHERE YEAR(booking_date) = ? AND status = 'Confirmed'";
+        try {
+            Double revenue = jdbcTemplate.queryForObject(sql, new Object[]{year}, Double.class);
+            return revenue != null ? revenue : 0.0;
+        } catch (Exception e) {
+            logger.error("Error calculating revenue by year: {}", e.getMessage());
+            return 0.0;
         }
     }
 }
