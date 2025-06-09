@@ -29,22 +29,35 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     private RoleRepository roleRepository;
 
     @Override
-    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
+    public OAuth2User loadUser(OAuth2UserRequest userRequest)
+            throws OAuth2AuthenticationException {
+
         String registrationId = userRequest.getClientRegistration().getRegistrationId(); // "google", "github"
         OAuth2User oauthUser = super.loadUser(userRequest);
         Map<String, Object> attributes = oauthUser.getAttributes();
 
-        System.out.println("OAuth2 attributes: " + attributes);
+        System.out.println("OAuth2 attributes: " + attributes); // Debug
 
         String email = (String) attributes.get("email");
-        String login = (String) attributes.get("login"); // fallback for GitHub
         String name = (String) attributes.get("name");
+        String username = email;
 
-        String username = email != null ? email : login;
-        if (username == null) {
-            throw new OAuth2AuthenticationException("Không lấy được email hoặc login từ OAuth2 provider.");
+        if ("github".equals(registrationId)) {
+            username = (String) attributes.get("login");
+            if (name == null)
+                name = username;
+
+            // GitHub thường không trả email nếu user không public email
+            if (email == null || email.isEmpty()) {
+                email = username + "@github.com"; // Gán email tạm để xử lý
+            }
         }
 
+        if (email == null || email.isEmpty()) {
+            throw new OAuth2AuthenticationException("Email not found from OAuth2 provider. Please ensure your Google/GitHub account has email access granted.");
+        }
+
+        // Lấy hoặc tạo role USER
         Role role = roleRepository.findByRoleName("USER")
                 .orElseGet(() -> {
                     Role newRole = new Role();
@@ -52,14 +65,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     return roleRepository.save(newRole);
                 });
 
+        // Tạo hoặc cập nhật user
         User user;
-        Optional<User> existingUser = userRepository.findByEmail(username);
+        Optional<User> existingUser = userRepository.findByEmail(email);
         if (existingUser.isEmpty()) {
             user = new User();
-            user.setEmail(username);
+            user.setEmail(email);
             user.setUsername(username);
             user.setName(name != null ? name : "No Name");
-            user.setPassword(null);
+            user.setPassword("pass_oauth"); // OAuth2 không có password
             user.setPhoneNumber(null);
             user.setGender(null);
             user.setDateOfBirth(null);
@@ -69,18 +83,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user.setRole(role);
 
             userRepository.save(user);
-            System.out.println("User created: " + username);
         } else {
             user = existingUser.get();
             user.setName(name);
-            user.setRole(role);
+            user.setRole(role); // đảm bảo user có role
             userRepository.save(user);
-            System.out.println("User updated: " + username);
         }
 
         return new DefaultOAuth2User(
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.getRoleName())),
-                attributes,
+                oauthUser.getAttributes(),
                 registrationId.equals("github") ? "login" : "email"
         );
     }
