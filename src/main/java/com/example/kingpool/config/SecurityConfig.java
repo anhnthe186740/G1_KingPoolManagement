@@ -66,6 +66,18 @@ public class SecurityConfig {
         return http.build();
     }
 
+<<<<<<< feature/duy
+    @Bean
+    public PersistentTokenRepository persistentTokenRepository() {
+        JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
+        tokenRepository.setDataSource(dataSource);
+        // Uncomment if first run to create table
+        // tokenRepository.setCreateTableOnStartup(true);
+        return tokenRepository;
+    }
+=======
+>>>>>>> main
+  //
 
     @Bean
     public PasswordEncoder passwordEncoder() {

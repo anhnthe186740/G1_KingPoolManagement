@@ -16,6 +16,9 @@ public class Feedback {
     @Column(name = "feedback_id")
     private Long feedbackId;
 
+    @Column(name = "user_id")
+    private Integer userId; // Thêm userId để ánh xạ với cột user_id trong database
+
     @Column(name = "name")
     private String name;
 
@@ -39,4 +42,13 @@ public class Feedback {
 
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
+
+    @Column(name = "response") // Thêm thuộc tính response
+    private String response;
+
+    @Column(name = "responded_at") // Thêm thuộc tính respondedAt
+    private LocalDateTime respondedAt;
+
+    @Column(name = "status") // Thêm thuộc tính status
+    private String status;
 }

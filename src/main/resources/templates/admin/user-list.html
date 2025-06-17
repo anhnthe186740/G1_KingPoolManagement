@@ -1,35 +1,296 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Danh sách người dùng</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="utf-8">
+    <title>KingPool - Danh sách người dùng</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link th:href="@{/lib/owlcarousel/assets/owl.carousel.min.css}" rel="stylesheet">
+    <link th:href="@{/lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css}" rel="stylesheet" />
+    <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #009CFF;
+            --light: #F3F6F9;
+            --dark: #191C24;
+        }
+        .back-to-top {
+            position: fixed;
+            display: none;
+            right: 45px;
+            bottom: 45px;
+            z-index: 99;
+        }
+        #spinner {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .5s ease-out, visibility 0s linear .5s;
+            z-index: 99999;
+        }
+        #spinner.show {
+            transition: opacity .5s ease-out, visibility 0s linear 0s;
+            visibility: visible;
+            opacity: 1;
+        }
+        .btn {
+            transition: .5s;
+        }
+        .btn.btn-primary {
+            color: #FFFFFF;
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            height: 100vh;
+            overflow-y: auto;
+            background: var(--light);
+            transition: 0.5s;
+            z-index: 999;
+        }
+        .content {
+            margin-left: 250px;
+            min-height: 100vh;
+            background: #FFFFFF;
+            transition: 0.5s;
+        }
+        @media (min-width: 992px) {
+            .sidebar { margin-left: 0; }
+            .sidebar.open { margin-left: -250px; }
+            .content { width: calc(100% - 250px); }
+            .content.open { width: 100%; margin-left: 0; }
+        }
+        @media (max-width: 991.98px) {
+            .sidebar { margin-left: -250px; }
+            .sidebar.open { margin-left: 0; }
+            .content { width: 100%; margin-left: 0; }
+        }
+        .sidebar .navbar .navbar-nav .nav-link {
+            padding: 7px 20px;
+            color: var(--dark);
+            font-weight: 500;
+            border-left: 3px solid var(--light);
+            border-radius: 0 30px 30px 0;
+            outline: none;
+        }
+        .sidebar .navbar .navbar-nav .nav-link:hover,
+        .sidebar .navbar .navbar-nav .nav-link.active {
+            color: var(--primary);
+            background: #FFFFFF;
+            border-color: var(--primary);
+        }
+        .sidebar .navbar .navbar-nav .nav-link i {
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #FFFFFF;
+            border-radius: 40px;
+        }
+        .content .navbar .navbar-nav .nav-link {
+            margin-left: 25px;
+            padding: 12px 0;
+            color: var(--dark);
+            outline: none;
+        }
+        .content .navbar .navbar-nav .nav-link:hover,
+        .content .navbar .navbar-nav .nav-link.active {
+            color: var(--primary);
+        }
+        .content .navbar .sidebar-toggler,
+        .content .navbar .navbar-nav .nav-link i {
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #FFFFFF;
+            border-radius: 40px;
+        }
+        .text-primary { color: var(--primary) !important; }
+        .bg-light { background-color: var(--light) !important; }
+        .text-dark { color: var(--dark) !important; }
+        .pagination { justify-content: center; margin-top: 20px; }
+        .page-link { color: var(--primary); border-radius: 5px; }
+        .page-item.active .page-link {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        .page-item.disabled .page-link { color: #6c757d; }
+        .page-link:hover:not(.disabled) { background-color: #e9ecef; }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            object-fit: cover;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h2>Danh sách người dùng</h2>
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Tên</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Vai trò</th>
-                    <th>Trạng thái</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="user : ${users}">
-                    <td th:text="${user.userId}"></td>
-                    <td th:text="${user.name}"></td>
-                    <td th:text="${user.username}"></td>
-                    <td th:text="${user.email}"></td>
-                    <td th:text="${user.role.roleName}"></td>
-                    <td th:text="${user.status}"></td>
-                </tr>
-            </tbody>
-        </table>
-        <a href="/dashboard" class="btn btn-secondary">Quay lại</a>
+    <div class="container-fluid position-relative bg-white d-flex p-0">
+        <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <div class="sidebar pe-4 pb-3">
+            <nav class="navbar bg-light navbar-light">
+                <a href="/dashboard" class="navbar-brand mx-4 mb-3">
+                    <h3 class="text-primary"><i class="fas fa-swimmer me-2"></i>KingPool</h3>
+                </a>
+                <div class="d-flex align-items-center ms-4 mb-4">
+                    <div class="position-relative">
+                        <img class="rounded-circle" th:src="@{${session.user != null && session.user.image != null} ? ('/uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}" alt="Ảnh đại diện" style="width: 40px; height: 40px;">
+                        <div class="bg-success rounded-circle border border-2 border-white position-absolute end-0 bottom-0 p-1"></div>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="mb-0" th:text="${session.user != null ? session.user.name : 'Admin'}"></h6>
+                        <span th:text="${session.user != null && session.user.role != null ? session.user.role.roleName : 'Admin'}"></span>
+                    </div>
+                </div>
+                <div class="navbar-nav w-100">
+                    <a href="/dashboard" class="nav-item nav-link"><i class="fa fa-tachometer-alt me-2"></i>Dashboard</a>
+                    <a href="/admin/users" class="nav-item nav-link active"><i class="fa fa-users me-2"></i>Quản lý người dùng</a>
+                    <a href="/admin/coaches" class="nav-item nav-link"><i class="fa fa-user-tie me-2"></i>Quản lý huấn luyện viên</a>
+                    <a href="/admin/feedbacks" class="nav-item nav-link"><i class="fa fa-comments me-2"></i>Quản lý phản hồi</a>
+                    <!-- <a href="/profile" class="nav-item nav-link"><i class="fa fa-user me-2"></i>Hồ sơ</a>
+                    <a href="/logout" class="nav-item nav-link"><i class="fa fa-sign-out-alt me-2"></i>Đăng xuất</a> -->
+                </div>
+            </nav>
+        </div>
+        <div class="content">
+            <nav class="navbar navbar-expand bg-light navbar-light sticky-top px-4 py-0">
+                <a href="/dashboard" class="navbar-brand d-flex d-lg-none me-4">
+                    <h2 class="text-primary mb-0"><i class="fas fa-swimmer"></i></h2>
+                </a>
+                <a href="#" class="sidebar-toggler flex-shrink-0">
+                    <i class="fa fa-bars"></i>
+                </a>
+                <form class="d-none d-md-flex ms-4">
+                    <input class="form-control border-0" type="search" placeholder="Tìm kiếm">
+                </form>
+                <div class="navbar-nav align-items-center ms-auto">
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fa fa-bell me-lg-2"></i>
+                            <span class="d-none d-lg-inline-flex">Thông báo</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
+                            <a href="#" class="dropdown-item">
+                                <h6 class="fw-normal mb-0">Có phản hồi mới</h6>
+                                <small>15 phút trước</small>
+                            </a>
+                            <hr class="dropdown-divider">
+                            <a href="#" class="dropdown-item text-center">Xem tất cả thông báo</a>
+                        </div>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                            <img class="rounded-circle me-lg-2" th:src="@{${session.user != null && session.user.image != null} ? ('/uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}" alt="Ảnh đại diện" style="width: 40px; height: 40px;">
+                            <span class="d-none d-lg-inline-flex" th:text="${session.user != null ? session.user.name : 'Admin'}"></span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
+                            <a href="/profile" class="dropdown-item">Hồ sơ</a>
+                            <a href="/logout" class="dropdown-item">Đăng xuất</a>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            <div class="container-fluid pt-4 px-4">
+                <div class="bg-light text-center rounded p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <h6 class="mb-0">Danh sách người dùng</h6>
+                        <div>
+                            <a href="/admin/users/add" class="btn btn-primary btn-sm me-2">Thêm người dùng</a>
+                            <a href="/dashboard" class="btn btn-primary btn-sm">Quay lại</a>
+                        </div>
+                    </div>
+                    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+                    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+                    <div class="table-responsive">
+                        <table class="table text-start align-middle table-bordered table-hover mb-0">
+                            <thead>
+                                <tr class="text-dark">
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Ảnh đại diện</th>
+                                    <th scope="col">Tên</th>
+                                    <th scope="col">Username</th>
+                                    <th scope="col">Email</th>
+                                    <th scope="col">Vai trò</th>
+                                    <th scope="col">Trạng thái</th>
+                                    <th scope="col">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="user : ${users}">
+                                    <td th:text="${user.userId}"></td>
+                                    <td>
+                                        <img th:src="@{${user.image != null} ? ('/uploads/' + ${user.image}) : '/assets/img/default-profile.jpg'}" class="user-avatar" alt="Ảnh đại diện">
+                                    </td>
+                                    <td th:text="${user.name}"></td>
+                                    <td th:text="${user.username}"></td>
+                                    <td th:text="${user.email}"></td>
+                                    <td>
+                                        <form th:action="@{/admin/users/change-role/{id}(id=${user.userId})}" method="post">
+                                            <select name="roleName" onchange="this.form.submit()">
+                                                <option th:selected="${user.role != null && user.role.roleName == 'Customer'}" value="Customer">Customer</option>
+                                                <option th:selected="${user.role != null && user.role.roleName == 'Coach'}" value="Coach">Coach</option>
+                                                <option th:selected="${user.role != null && user.role.roleName == 'Admin'}" value="Admin">Admin</option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                    <td th:text="${user.status}"></td>
+                                    <td>
+                                        <a th:href="@{/admin/users/view/{id}(id=${user.userId})}" class="btn btn-sm btn-info me-1"><i class="fa fa-eye"></i></a>
+                                        <a th:href="@{/admin/users/edit/{id}(id=${user.userId})}" class="btn btn-sm btn-primary me-1"><i class="fa fa-edit"></i></a>
+                                        <form th:action="@{/admin/users/delete/{id}(id=${user.userId})}" method="post" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc muốn xóa người dùng này?')"><i class="fa fa-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(users)}">
+                                    <td colspan="8" class="text-center">Chưa có người dùng nào.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid pt-4 px-4">
+                <div class="bg-light rounded-top p-4">
+                    <div class="row">
+                        <div class="col-12 col-sm-6 text-center text-sm-start">
+                            © <a href="/">KingPool</a>, All Rights Reserved.
+                        </div>
+                        <div class="col-12 col-sm-6 text-center text-sm-end">
+                            Designed By <a href="#">KingPool Team</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
     </div>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/lib/easing/easing.min.js}"></script>
+    <script th:src="@{/lib/waypoints/waypoints.min.js}"></script>
+    <script th:src="@{/lib/owlcarousel/owl.carousel.min.js}"></script>
+    <script th:src="@{/lib/tempusdominus/js/moment.min.js}"></script>
+    <script th:src="@{/lib/tempusdominus/js/moment-timezone.min.js}"></script>
+    <script th:src="@{/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
 </body>
 </html>

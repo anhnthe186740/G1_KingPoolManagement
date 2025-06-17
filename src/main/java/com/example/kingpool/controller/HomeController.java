@@ -9,7 +9,7 @@ public class HomeController {
 
     @GetMapping("/")
     public String getRoot() {
-        return "homepage/index";
+        return "homepage/index"; // Trang chủ hoặc view khác
     }
 
     @GetMapping("/homepage")
@@ -20,11 +20,6 @@ public class HomeController {
     @GetMapping("/user-homepage")
     public String getUserHomePage() {
         return "homepage/user-homepage";
-    }
-
-    @GetMapping("/dashboard")
-    public String getDashboard() {
-        return "dashboard/dashboard";
     }
 
     @GetMapping("/login")

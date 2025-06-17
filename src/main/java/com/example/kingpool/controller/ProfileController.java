@@ -9,11 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -38,8 +34,13 @@ public class ProfileController {
 
         User user = authService.getUserFromAuthentication(authentication);
         logger.info("Viewing profile for user: {}", user.getUsername());
+
         model.addAttribute("user", user);
-        return "profile/view";
+        // Xác định đường dẫn "Quay lại" dựa trên vai trò
+        String backUrl = "Admin".equals(user.getRole().getRoleName()) ? "/dashboard" : "/homepage/user-homepage";
+        model.addAttribute("backUrl", backUrl);
+
+        return "profile/view"; // View chung cho cả admin và user
     }
 
     @GetMapping("/edit")
@@ -51,7 +52,12 @@ public class ProfileController {
         User user = authService.getUserFromAuthentication(authentication);
         logger.info("Editing profile for user: {}", user.getUsername());
         model.addAttribute("user", user);
-        return "profile/edit";
+
+        // Xác định đường dẫn "Quay lại" dựa trên vai trò
+        String backUrl = "Admin".equals(user.getRole().getRoleName()) ? "/dashboard" : "/homepage/user-homepage";
+        model.addAttribute("backUrl", backUrl);
+
+        return "profile/edit"; // View chỉnh sửa chung cho cả admin và user
     }
 
     @PostMapping("/edit")
@@ -67,6 +73,8 @@ public class ProfileController {
             return "redirect:/login";
         }
 
+        logger.info("Starting profile update for user: {}", authentication.getName());
+
         // Validate name and email
         if (updatedUser.getName() == null || updatedUser.getName().trim().isEmpty()) {
             result.rejectValue("name", "error.name", "Tên không được để trống");
@@ -79,6 +87,7 @@ public class ProfileController {
 
         // Validate image file
         if (!imageFile.isEmpty()) {
+            logger.info("Image file received: name={}, size={}", imageFile.getOriginalFilename(), imageFile.getSize());
             String contentType = imageFile.getContentType();
             if (contentType == null || !contentType.startsWith("image/")) {
                 result.rejectValue("image", "error.image", "Vui lòng chọn một file ảnh (jpg, png, v.v.)");
@@ -106,6 +115,10 @@ public class ProfileController {
         if (result.hasErrors()) {
             logger.warn("Validation errors: {}", result.getAllErrors());
             model.addAttribute("user", updatedUser);
+            // Thêm lại backUrl khi có lỗi
+            User user = authService.getUserFromAuthentication(authentication);
+            String backUrl = "Admin".equals(user.getRole().getRoleName()) ? "/dashboard" : "/homepage/user-homepage";
+            model.addAttribute("backUrl", backUrl);
             return "profile/edit";
         }
 
@@ -116,8 +129,8 @@ public class ProfileController {
             logger.info("Profile updated successfully for user: {}", currentUser.getUsername());
             return "redirect:/profile";
         } catch (Exception e) {
-            logger.error("Error updating profile: {}", e.getMessage());
-            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            logger.error("Error updating profile: {}", e.getMessage(), e);
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi cập nhật hồ sơ: " + e.getMessage());
             return "redirect:/profile/edit";
         }
     }
@@ -145,7 +158,7 @@ public class ProfileController {
             logger.info("Password changed successfully for user: {}", currentUser.getUsername());
             return "redirect:/profile/edit";
         } catch (Exception e) {
-            logger.error("Error changing password: {}", e.getMessage());
+            logger.error("Error changing password: {}", e.getMessage(), e);
             redirectAttributes.addFlashAttribute("passwordError", e.getMessage());
             return "redirect:/profile/edit";
         }
