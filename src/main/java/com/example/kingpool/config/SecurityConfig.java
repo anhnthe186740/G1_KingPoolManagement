@@ -48,7 +48,7 @@ public class SecurityConfig {
                 .requestMatchers("/", "/homepage", "/login", "/register", "/forgot", "/forgot/**").permitAll()
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/forgot/resend").permitAll()
-                .requestMatchers("/dashboard", "/admin/**").hasRole("Admin")
+                .requestMatchers("/dashboard", "/admin/**").hasRole("ADMIN")
                 .requestMatchers("/user-homepage", "/api/auth/profile").authenticated()
                 .anyRequest().authenticated())
             .formLogin(form -> form
