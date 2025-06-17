@@ -13,6 +13,7 @@
     <link th:href="@{/lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css}" rel="stylesheet"/>
     <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
     <link th:href="@{/css/style.css}" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
     <style>
         :root {
             --primary: #009CFF;
@@ -146,7 +147,7 @@
             </a>
             <div class="d-flex align-items-center ms-4 mb-4">
                 <div class="position-relative">
-                    <img class="rounded-circle" th:src="@{${session.user != null && session.user.image != null} ? ('/Uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}" alt="Ảnh đại diện" style="width: 40px; height: 40px;">
+                    <img class="rounded-circle" th:src="@{${session.user != null && session.user.image != null} ? ('/Uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}" alt="" style="width: 40px; height: 40px;">
                     <div class="bg-success rounded-circle border border-2 border-white position-absolute end-0 bottom-0 p-1"></div>
                 </div>
                 <div class="ms-3">
@@ -159,8 +160,8 @@
                 <a href="/admin/users" class="nav-item nav-link"><i class="fa fa-users me-2"></i>Quản lý người dùng</a>
                 <a href="/admin/coaches" class="nav-item nav-link"><i class="fa fa-user-tie me-2"></i>Quản lý huấn luyện viên</a>
                 <a href="/admin/feedbacks" class="nav-item nav-link"><i class="fa fa-comments me-2"></i>Quản lý phản hồi</a>
-                <!-- <a href="/profile" class="nav-item nav-link"><i class="fa fa-user me-2"></i>Hồ sơ</a>
-                <a href="/logout" class="nav-item nav-link"><i class="fa fa-sign-out-alt me-2"></i>Đăng xuất</a> -->
+                <a href="/profile" class="nav-item nav-link"><i class="fa fa-user me-2"></i>Hồ sơ</a>
+                <a href="/logout" class="nav-item nav-link"><i class="fa fa-sign-out-alt me-2"></i>Đăng xuất</a>
             </div>
         </nav>
     </div>
@@ -192,12 +193,12 @@
                 </div>
                 <div class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                        <img class="rounded-circle me-lg-2" th:src="@{${session.user != null && session.user.image != null} ? ('/Uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}" alt="Ảnh đại diện" style="width: 40px; height: 40px;">
+                        <img class="rounded-circle me-lg-2" th:src="@{${session.user != null && session.user.image != null} ? ('/Uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}" alt="" style="width: 40px; height: 40px;">
                         <span class="d-none d-lg-inline-flex" th:text="${session.user != null ? session.user.name : ''}"></span>
                     </a>
                     <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
                         <a href="/profile" class="dropdown-item">Hồ sơ</a>
-                        <a href="/logout" class="dropdown-item">Đăng xuất</a>
+                        <a href="/homepage" class="dropdown-item">Đăng xuất</a>
                     </div>
                 </div>
             </div>
@@ -247,6 +248,10 @@
                 <div class="col-12">
                     <div class="bg-light rounded h-100 p-4">
                         <h6 class="mb-4">Thống kê</h6>
+                        <div class="mb-3">
+                            <label for="datePicker">Chọn ngày:</label>
+                            <input type="text" id="datePicker" class="form-control" style="width: 200px; display: inline-block;" th:value="${selectedDate}">
+                        </div>
                         <div class="chart-container">
                             <canvas id="dashboard-chart"></canvas>
                         </div>
@@ -293,6 +298,7 @@
 <script th:src="@{/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js}"></script>
 <script th:src="@{/js/main.js}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
 <script th:inline="javascript">
 /*<![CDATA[*/
 try {
@@ -448,6 +454,15 @@ try {
 
         document.getElementById('revenueType').addEventListener('change', function() {
             updateRevenueChart(this.value);
+        });
+
+        $('#datePicker').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            todayHighlight: true
+        }).on('changeDate', function(e) {
+            var selectedDate = $(this).val();
+            window.location.href = '/dashboard?date=' + selectedDate;
         });
     }
 } catch (e) {

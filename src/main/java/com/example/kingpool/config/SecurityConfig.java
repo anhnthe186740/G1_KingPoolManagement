@@ -19,6 +19,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+
 
 
 @Configuration
@@ -66,7 +69,6 @@ public class SecurityConfig {
         return http.build();
     }
 
-<<<<<<< feature/duy
     @Bean
     public PersistentTokenRepository persistentTokenRepository() {
         JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
@@ -75,8 +77,6 @@ public class SecurityConfig {
         // tokenRepository.setCreateTableOnStartup(true);
         return tokenRepository;
     }
-=======
->>>>>>> main
   //
 
     @Bean

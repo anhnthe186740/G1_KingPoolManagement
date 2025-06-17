@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -37,6 +38,9 @@ public class BookingController {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
     @GetMapping
     public String showBookingPage(Model model) {
         logger.debug("Accessing booking page");
@@ -55,11 +59,11 @@ public class BookingController {
         logger.debug("Accessing freestyle booking page");
         try {
             model.addAttribute("schedules", bookingService.getAvailableSchedules());
-            return "booking/book-ticket";
+            return "booking/freestyle-booking";
         } catch (Exception e) {
             logger.error("Error loading freestyle booking page: {}", e.getMessage());
             model.addAttribute("error", "Lỗi khi tải trang đặt lịch bơi tự do");
-            return "booking/book-ticket";
+            return "booking/freestyle-booking";
         }
     }
 
@@ -84,6 +88,13 @@ public class BookingController {
         try {
             Booking booking = bookingService.bookTicket(authentication, scheduleId, quantityAdult, quantityChild);
             redirectAttributes.addFlashAttribute("success", "Đặt vé thành công! Mã đặt vé: " + booking.getBookingId());
+
+            // Gửi thông báo WebSocket
+            String scheduleSql = "SELECT schedule_id, start_time, end_time, max_tickets, adult_price, child_price, status " +
+                                "FROM Schedules WHERE schedule_id = ?";
+            Map<String, Object> schedule = jdbcTemplate.queryForMap(scheduleSql, scheduleId);
+            messagingTemplate.convertAndSend("/topic/bookings", schedule);
+
             return "redirect:/booking/confirmation/" + booking.getBookingId();
         } catch (Exception e) {
             logger.error("Lỗi khi đặt vé: {}", e.getMessage());
@@ -177,6 +188,16 @@ public class BookingController {
 
         try {
             bookingService.cancelBooking(authentication, bookingId);
+
+            // Gửi thông báo WebSocket
+            String bookingSql = "SELECT schedule_id FROM Booking WHERE booking_id = ?";
+            Map<String, Object> bookingData = jdbcTemplate.queryForMap(bookingSql, bookingId);
+            Integer scheduleId = ((Number) bookingData.get("schedule_id")).intValue();
+            String scheduleSql = "SELECT schedule_id, start_time, end_time, max_tickets, adult_price, child_price, status " +
+                                "FROM Schedules WHERE schedule_id = ?";
+            Map<String, Object> schedule = jdbcTemplate.queryForMap(scheduleSql, scheduleId);
+            messagingTemplate.convertAndSend("/topic/bookings", schedule);
+
             redirectAttributes.addFlashAttribute("success", "Hủy vé thành công!");
             logger.info("Booking {} cancelled successfully", bookingId);
         } catch (Exception e) {
