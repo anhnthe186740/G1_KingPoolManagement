@@ -47,6 +47,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/homepage", "/login", "/register", "/forgot", "/forgot/**").permitAll()
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/img/**", "/js/**", "/lib/**", "/scss/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/forgot/resend").permitAll()
                 .requestMatchers("/dashboard", "/admin/**").hasRole("ADMIN")
                 .requestMatchers("/user-homepage", "/api/auth/profile").authenticated()
