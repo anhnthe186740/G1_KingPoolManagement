@@ -1,0 +1,63 @@
+<!-- ... phần đầu giữ nguyên ... -->
+<form th:action="@{/admin/swim-classes/edit/{id}(id=${swimClass.classId})}" method="post">
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="mb-3">
+        <label class="form-label">Tên lớp học</label>
+        <input type="text" name="name" class="form-control" th:value="${swimClass.name}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Huấn luyện viên</label>
+        <select name="coachId" class="form-select" required>
+            <option value="">-- Chọn HLV --</option>
+            <option th:each="coach : ${coaches}" th:value="${coach.userId}" th:text="${coach.name}"
+                    th:selected="${coach.userId == swimClass.coach.userId}"></option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Số học viên tối đa</label>
+        <input type="number" name="maxStudents" min="1" class="form-control" th:value="${swimClass.maxStudents}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Trình độ</label>
+        <select name="level" class="form-select" required>
+            <option value="Beginner" th:selected="${swimClass.level == 'Beginner'}">Sơ cấp</option>
+            <option value="Intermediate" th:selected="${swimClass.level == 'Intermediate'}">Trung cấp</option>
+            <option value="Advanced" th:selected="${swimClass.level == 'Advanced'}">Nâng cao</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Mô tả</label>
+        <textarea name="description" class="form-control" th:text="${swimClass.description}"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Ngày bắt đầu</label>
+        <input type="date" name="startDate" class="form-control"
+               th:value="${#temporals.format(swimClass.schedules[0]?.startTime?.toLocalDate(), 'yyyy-MM-dd')}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Thời gian bắt đầu mỗi buổi</label>
+        <input type="time" name="classTime" class="form-control"
+               th:value="${#temporals.format(swimClass.schedules[0]?.startTime?.toLocalTime(), 'HH:mm')}" required>
+    </div>
+
+    <div class="mb-3">
+    <label class="form-label">Lịch học trong tuần</label><br />
+    <div class="form-check form-check-inline" th:each="day : ${daysOfWeek}">
+        <input class="form-check-input" type="checkbox" name="studyDays"
+               th:value="${day}" th:id="${'day__' + day.name()}"
+               th:checked="${#lists.contains(#lists.map(swimClass.schedules, 'startTime.dayOfWeek.name()'), day.name())}">
+        <label class="form-check-label" th:for="${'day__' + day.name()}" th:text="${day.name()}"></label>
+    </div>
+</div>
+
+
+    <button type="submit" class="btn btn-primary">Lưu</button>
+    <a th:href="@{/admin/swim-classes}" class="btn btn-secondary">Hủy</a>
+</form>

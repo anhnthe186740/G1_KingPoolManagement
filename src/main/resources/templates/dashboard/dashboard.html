@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="utf-8">
     <title>KingPool - Dashboard</title>
@@ -10,16 +11,18 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
     <link th:href="@{/lib/owlcarousel/assets/owl.carousel.min.css}" rel="stylesheet">
-    <link th:href="@{/lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css}" rel="stylesheet"/>
+    <link th:href="@{/lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css}" rel="stylesheet" />
     <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
     <link th:href="@{/css/style.css}" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"
+        rel="stylesheet">
     <style>
         :root {
             --primary: #009CFF;
             --light: #F3F6F9;
             --dark: #191C24;
         }
+
         .back-to-top {
             position: fixed;
             display: none;
@@ -27,25 +30,30 @@
             bottom: 45px;
             z-index: 99;
         }
+
         #spinner {
             opacity: 0;
             visibility: hidden;
             transition: opacity .5s ease-out, visibility 0s linear .5s;
             z-index: 99999;
         }
+
         #spinner.show {
             transition: opacity .5s ease-out, visibility 0s linear 0s;
             visibility: visible;
             opacity: 1;
         }
+
         .btn {
             transition: .5s;
         }
+
         .btn.btn-primary {
             color: #FFFFFF;
             background-color: var(--primary);
             border-color: var(--primary);
         }
+
         .sidebar {
             position: fixed;
             top: 0;
@@ -58,23 +66,48 @@
             transition: 0.5s;
             z-index: 999;
         }
+
         .content {
             margin-left: 250px;
             min-height: 100vh;
             background: #FFFFFF;
             transition: 0.5s;
         }
+
         @media (min-width: 992px) {
-            .sidebar { margin-left: 0; }
-            .sidebar.open { margin-left: -250px; }
-            .content { width: calc(100% - 250px); }
-            .content.open { width: 100%; margin-left: 0; }
+            .sidebar {
+                margin-left: 0;
+            }
+
+            .sidebar.open {
+                margin-left: -250px;
+            }
+
+            .content {
+                width: calc(100% - 250px);
+            }
+
+            .content.open {
+                width: 100%;
+                margin-left: 0;
+            }
         }
+
         @media (max-width: 991.98px) {
-            .sidebar { margin-left: -250px; }
-            .sidebar.open { margin-left: 0; }
-            .content { width: 100%; margin-left: 0; }
+            .sidebar {
+                margin-left: -250px;
+            }
+
+            .sidebar.open {
+                margin-left: 0;
+            }
+
+            .content {
+                width: 100%;
+                margin-left: 0;
+            }
         }
+
         .sidebar .navbar .navbar-nav .nav-link {
             padding: 7px 20px;
             color: var(--dark);
@@ -83,12 +116,14 @@
             border-radius: 0 30px 30px 0;
             outline: none;
         }
+
         .sidebar .navbar .navbar-nav .nav-link:hover,
         .sidebar .navbar .navbar-nav .nav-link.active {
             color: var(--primary);
             background: #FFFFFF;
             border-color: var(--primary);
         }
+
         .sidebar .navbar .navbar-nav .nav-link i {
             width: 40px;
             height: 40px;
@@ -98,16 +133,19 @@
             background: #FFFFFF;
             border-radius: 40px;
         }
+
         .content .navbar .navbar-nav .nav-link {
             margin-left: 25px;
             padding: 12px 0;
             color: var(--dark);
             outline: none;
         }
+
         .content .navbar .navbar-nav .nav-link:hover,
         .content .navbar .navbar-nav .nav-link.active {
             color: var(--primary);
         }
+
         .content .navbar .sidebar-toggler,
         .content .navbar .navbar-nav .nav-link i {
             width: 40px;
@@ -118,357 +156,402 @@
             background: #FFFFFF;
             border-radius: 40px;
         }
-        .text-primary { color: var(--primary) !important; }
-        .bg-light { background-color: var(--light) !important; }
-        .text-dark { color: var(--dark) !important; }
+
+        .text-primary {
+            color: var(--primary) !important;
+        }
+
+        .bg-light {
+            background-color: var(--light) !important;
+        }
+
+        .text-dark {
+            color: var(--dark) !important;
+        }
+
         .chart-container {
             position: relative;
             width: 100%;
             height: 400px;
             margin: 0 auto;
         }
+
         #dashboard-chart {
             width: 100% !important;
             height: 100% !important;
         }
     </style>
 </head>
+
 <body>
-<div class="container-fluid position-relative bg-white d-flex p-0" th:with="totalUsers=${totalUsers ?: 0}, totalBookings=${totalBookings ?: 0}, totalCoaches=${totalCoaches ?: 0}, totalFeedbacks=${totalFeedbacks ?: 0}, dailyUsers=${dailyStats?.get('usersToday') ?: 0}, dailyBookings=${dailyStats?.get('bookingsToday') ?: 0}, dailyCoaches=${dailyStats?.get('coachesToday') ?: 0}, dailyFeedbacks=${dailyStats?.get('feedbacksToday') ?: 0}, dailyRevenue=${revenueStats?.get('dailyRevenue') ?: 0}, monthlyRevenue=${revenueStats?.get('monthlyRevenue') ?: 0}, quarterlyRevenue=${revenueStats?.get('quarterlyRevenue') ?: 0}, yearlyRevenue=${revenueStats?.get('yearlyRevenue') ?: 0}">
-    <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-            <span class="sr-only">Loading...</span>
+    <div class="container-fluid position-relative bg-white d-flex p-0"
+        th:with="totalUsers=${totalUsers ?: 0}, totalBookings=${totalBookings ?: 0}, totalCoaches=${totalCoaches ?: 0}, totalFeedbacks=${totalFeedbacks ?: 0}, dailyUsers=${dailyStats?.get('usersToday') ?: 0}, dailyBookings=${dailyStats?.get('bookingsToday') ?: 0}, dailyCoaches=${dailyStats?.get('coachesToday') ?: 0}, dailyFeedbacks=${dailyStats?.get('feedbacksToday') ?: 0}, dailyRevenue=${revenueStats?.get('dailyRevenue') ?: 0}, monthlyRevenue=${revenueStats?.get('monthlyRevenue') ?: 0}, quarterlyRevenue=${revenueStats?.get('quarterlyRevenue') ?: 0}, yearlyRevenue=${revenueStats?.get('yearlyRevenue') ?: 0}">
+        <div id="spinner"
+            class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
         </div>
-    </div>
-    <div class="sidebar pe-4 pb-3">
-        <nav class="navbar bg-light navbar-light">
-            <a href="/dashboard" class="navbar-brand mx-4 mb-3">
-                <h3 class="text-primary"><i class="fas fa-swimmer me-2"></i>KingPool</h3>
-            </a>
-            <div class="d-flex align-items-center ms-4 mb-4">
-                <div class="position-relative">
-                    <img class="rounded-circle" th:src="@{${session.user != null && session.user.image != null} ? ('/Uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}" alt="" style="width: 40px; height: 40px;">
-                    <div class="bg-success rounded-circle border border-2 border-white position-absolute end-0 bottom-0 p-1"></div>
+        <div class="sidebar pe-4 pb-3">
+            <nav class="navbar bg-light navbar-light">
+                <a href="/dashboard" class="navbar-brand mx-4 mb-3">
+                    <h3 class="text-primary"><i class="fas fa-swimmer me-2"></i>KingPool</h3>
+                </a>
+                <div class="d-flex align-items-center ms-4 mb-4">
+                    <div class="position-relative">
+                        <img class="rounded-circle"
+                            th:src="@{${session.user != null && session.user.image != null} ? ('/Uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}"
+                            alt="" style="width: 40px; height: 40px;">
+                        <div
+                            class="bg-success rounded-circle border border-2 border-white position-absolute end-0 bottom-0 p-1">
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <h6 class="mb-0" th:text="${session.user != null ? session.user.name : ''}"></h6>
+                        <span
+                            th:text="${session.user != null && session.user.role != null ? session.user.role.roleName : ''}"></span>
+                    </div>
                 </div>
-                <div class="ms-3">
-                    <h6 class="mb-0" th:text="${session.user != null ? session.user.name : ''}"></h6>
-                    <span th:text="${session.user != null && session.user.role != null ? session.user.role.roleName : ''}"></span>
+                <div class="navbar-nav w-100">
+                    <a href="/dashboard" class="nav-item nav-link active"><i
+                            class="fa fa-tachometer-alt me-2"></i>Dashboard</a>
+                    <a href="/admin/users" class="nav-item nav-link"><i class="fa fa-users me-2"></i>Quản lý người
+                        dùng</a>
+                    <a href="/admin/coaches" class="nav-item nav-link"><i class="fa fa-user-tie me-2"></i>Quản lý huấn
+                        luyện viên</a>
+                    <a href="/admin/swim-classes" class="nav-item nav-link"><i class="fa fa-swimming-pool me-2"></i>Quản
+                        lý lớp học bơi</a>
+                    <a href="/admin/feedbacks" class="nav-item nav-link"><i class="fa fa-comments me-2"></i>Quản lý phản
+                        hồi</a>
+                    <a href="/profile" class="nav-item nav-link"><i class="fa fa-user me-2"></i>Hồ sơ</a>
+                    <a href="/logout" class="nav-item nav-link"><i class="fa fa-sign-out-alt me-2"></i>Đăng xuất</a>
                 </div>
-            </div>
-            <div class="navbar-nav w-100">
-                <a href="/dashboard" class="nav-item nav-link active"><i class="fa fa-tachometer-alt me-2"></i>Dashboard</a>
-                <a href="/admin/users" class="nav-item nav-link"><i class="fa fa-users me-2"></i>Quản lý người dùng</a>
-                <a href="/admin/coaches" class="nav-item nav-link"><i class="fa fa-user-tie me-2"></i>Quản lý huấn luyện viên</a>
-                <a href="/admin/feedbacks" class="nav-item nav-link"><i class="fa fa-comments me-2"></i>Quản lý phản hồi</a>
-                <a href="/profile" class="nav-item nav-link"><i class="fa fa-user me-2"></i>Hồ sơ</a>
-                <a href="/logout" class="nav-item nav-link"><i class="fa fa-sign-out-alt me-2"></i>Đăng xuất</a>
-            </div>
-        </nav>
-    </div>
-    <div class="content">
-        <nav class="navbar navbar-expand bg-light navbar-light sticky-top px-4 py-0">
-            <a href="/dashboard" class="navbar-brand d-flex d-lg-none me-4">
-                <h2 class="text-primary mb-0"><i class="fas fa-swimmer"></i></h2>
-            </a>
-            <a href="#" class="sidebar-toggler flex-shrink-0">
-                <i class="fa fa-bars"></i>
-            </a>
-            <form class="d-none d-md-flex ms-4">
-                <input class="form-control border-0" type="search" placeholder="Tìm kiếm">
-            </form>
-            <div class="navbar-nav align-items-center ms-auto">
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                        <i class="fa fa-bell me-lg-2"></i>
-                        <span class="d-none d-lg-inline-flex">Thông báo</span>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
-                        <a href="#" class="dropdown-item">
-                            <h6 class="fw-normal mb-0">Có phản hồi mới</h6>
-                            <small>15 phút trước</small>
+            </nav>
+        </div>
+        <div class="content">
+            <nav class="navbar navbar-expand bg-light navbar-light sticky-top px-4 py-0">
+                <a href="/dashboard" class="navbar-brand d-flex d-lg-none me-4">
+                    <h2 class="text-primary mb-0"><i class="fas fa-swimmer"></i></h2>
+                </a>
+                <a href="#" class="sidebar-toggler flex-shrink-0">
+                    <i class="fa fa-bars"></i>
+                </a>
+                <form class="d-none d-md-flex ms-4">
+                    <input class="form-control border-0" type="search" placeholder="Tìm kiếm">
+                </form>
+                <div class="navbar-nav align-items-center ms-auto">
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fa fa-bell me-lg-2"></i>
+                            <span class="d-none d-lg-inline-flex">Thông báo</span>
                         </a>
-                        <hr class="dropdown-divider">
-                        <a href="#" class="dropdown-item text-center">Xem tất cả thông báo</a>
+                        <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
+                            <a href="#" class="dropdown-item">
+                                <h6 class="fw-normal mb-0">Có phản hồi mới</h6>
+                                <small>15 phút trước</small>
+                            </a>
+                            <hr class="dropdown-divider">
+                            <a href="#" class="dropdown-item text-center">Xem tất cả thông báo</a>
+                        </div>
+                    </div>
+                    <div class="nav-item dropdown">
+                        <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                            <img class="rounded-circle me-lg-2"
+                                th:src="@{${session.user != null && session.user.image != null} ? ('/Uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}"
+                                alt="" style="width: 40px; height: 40px;">
+                            <span class="d-none d-lg-inline-flex"
+                                th:text="${session.user != null ? session.user.name : ''}"></span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
+                            <a href="/profile" class="dropdown-item">Hồ sơ</a>
+                            <a href="/logout" class="dropdown-item">Đăng xuất</a>
+                        </div>
                     </div>
                 </div>
-                <div class="nav-item dropdown">
-                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                        <img class="rounded-circle me-lg-2" th:src="@{${session.user != null && session.user.image != null} ? ('/Uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}" alt="" style="width: 40px; height: 40px;">
-                        <span class="d-none d-lg-inline-flex" th:text="${session.user != null ? session.user.name : ''}"></span>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
-                        <a href="/profile" class="dropdown-item">Hồ sơ</a>
-                        <a href="/logout" class="dropdown-item">Đăng xuất</a>
+            </nav>
+            <div class="container-fluid pt-4 px-4">
+                <div class="row g-4">
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                            <i class="fa fa-users fa-3x text-primary"></i>
+                            <div class="ms-3" id="total-users-container">
+                                <p class="mb-2">Tổng số người dùng</p>
+                                <h6 class="mb-0" th:text="${totalUsers} ?: 0" id="total-users">0</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                            <i class="fa fa-ticket-alt fa-3x text-primary"></i>
+                            <div class="ms-3" id="total-bookings-container">
+                                <p class="mb-2">Tổng số vé đã đặt</p>
+                                <h6 class="mb-0" th:text="${totalBookings} ?: 0" id="total-bookings">0</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                            <i class="fa fa-user-tie fa-3x text-primary"></i>
+                            <div class="ms-3" id="total-coaches-container">
+                                <p class="mb-2">Tổng số huấn luyện viên</p>
+                                <h6 class="mb-0" th:text="${totalCoaches} ?: 0" id="total-coaches">0</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                            <i class="fa fa-swimmer fa-3x text-primary"></i>
+                            <div class="ms-3" id="total-swim-classes-container">
+                                <p class="mb-2">Tổng số lớp học bơi</p>
+                                <h6 class="mb-0" th:text="${totalSwimClasses} ?: 0" id="total-swim-classes">0</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
+                            <i class="fa fa-comments fa-3x text-primary"></i>
+                            <div class="ms-3" id="total-feedbacks-container">
+                                <p class="mb-2">Tổng số phản hồi</p>
+                                <h6 class="mb-0" th:text="${totalFeedbacks} ?: 0" id="total-feedbacks">0</h6>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </nav>
-        <div class="container-fluid pt-4 px-4">
-            <div class="row g-4">
-                <div class="col-sm-6 col-xl-3">
-                    <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
-                        <i class="fa fa-users fa-3x text-primary"></i>
-                        <div class="ms-3" id="total-users-container">
-                            <p class="mb-2">Tổng số người dùng</p>
-                            <h6 class="mb-0" th:text="${totalUsers} ?: 0" id="total-users">0</h6>
+            <div class="container-fluid pt-4 px-4">
+                <div class="row g-4">
+                    <div class="col-12">
+                        <div class="bg-light rounded h-100 p-4">
+                            <h6 class="mb-4">Thống kê</h6>
+                            <div class="mb-3">
+                                <label for="datePicker">Chọn ngày:</label>
+                                <input type="text" id="datePicker" class="form-control"
+                                    style="width: 200px; display: inline-block;" th:value="${selectedDate}">
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="dashboard-chart"></canvas>
+                            </div>
+                            <div class="mt-3">
+                                <label for="statsType">Xem thống kê:</label>
+                                <select id="statsType" class="form-select" style="width: 200px; display: inline-block;">
+                                    <option value="dailyStats">Theo ngày</option>
+                                    <option value="totalStats">Tổng cộng</option>
+                                </select>
+                                <label for="revenueType" class="ms-3">Doanh thu:</label>
+                                <select id="revenueType" class="form-select"
+                                    style="width: 200px; display: inline-block;">
+                                    <option value="daily">Theo ngày</option>
+                                    <option value="monthly">Theo tháng</option>
+                                    <option value="quarterly">Theo quý</option>
+                                    <option value="yearly">Theo năm</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-6 col-xl-3">
-                    <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
-                        <i class="fa fa-ticket-alt fa-3x text-primary"></i>
-                        <div class="ms-3" id="total-bookings-container">
-                            <p class="mb-2">Tổng số vé đã đặt</p>
-                            <h6 class="mb-0" th:text="${totalBookings} ?: 0" id="total-bookings">0</h6>
+            </div>
+            <div class="container-fluid pt-4 px-4">
+                <div class="bg-light rounded-top p-4">
+                    <div class="row">
+                        <div class="col-12 col-sm-6 text-center text-sm-start">
+                            © <a href="/">KingPool</a>, All Rights Reserved.
                         </div>
-                    </div>
-                </div>
-                <div class="col-sm-6 col-xl-3">
-                    <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
-                        <i class="fa fa-user-tie fa-3x text-primary"></i>
-                        <div class="ms-3" id="total-coaches-container">
-                            <p class="mb-2">Tổng số huấn luyện viên</p>
-                            <h6 class="mb-0" th:text="${totalCoaches} ?: 0" id="total-coaches">0</h6>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-sm-6 col-xl-3">
-                    <div class="bg-light rounded d-flex align-items-center justify-content-between p-4">
-                        <i class="fa fa-comments fa-3x text-primary"></i>
-                        <div class="ms-3" id="total-feedbacks-container">
-                            <p class="mb-2">Tổng số phản hồi</p>
-                            <h6 class="mb-0" th:text="${totalFeedbacks} ?: 0" id="total-feedbacks">0</h6>
+                        <div class="col-12 col-sm-6 text-center text-sm-end">
+                            Designed By <a href="#">KingPool Team</a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="container-fluid pt-4 px-4">
-            <div class="row g-4">
-                <div class="col-12">
-                    <div class="bg-light rounded h-100 p-4">
-                        <h6 class="mb-4">Thống kê</h6>
-                        <div class="mb-3">
-                            <label for="datePicker">Chọn ngày:</label>
-                            <input type="text" id="datePicker" class="form-control" style="width: 200px; display: inline-block;" th:value="${selectedDate}">
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="dashboard-chart"></canvas>
-                        </div>
-                        <div class="mt-3">
-                            <label for="statsType">Xem thống kê:</label>
-                            <select id="statsType" class="form-select" style="width: 200px; display: inline-block;">
-                                <option value="dailyStats">Theo ngày</option>
-                                <option value="totalStats">Tổng cộng</option>
-                            </select>
-                            <label for="revenueType" class="ms-3">Doanh thu:</label>
-                            <select id="revenueType" class="form-select" style="width: 200px; display: inline-block;">
-                                <option value="daily">Theo ngày</option>
-                                <option value="monthly">Theo tháng</option>
-                                <option value="quarterly">Theo quý</option>
-                                <option value="yearly">Theo năm</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="container-fluid pt-4 px-4">
-            <div class="bg-light rounded-top p-4">
-                <div class="row">
-                    <div class="col-12 col-sm-6 text-center text-sm-start">
-                        © <a href="/">KingPool</a>, All Rights Reserved.
-                    </div>
-                    <div class="col-12 col-sm-6 text-center text-sm-end">
-                        Designed By <a href="#">KingPool Team</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
     </div>
-    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
-</div>
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-<script th:src="@{/lib/easing/easing.min.js}"></script>
-<script th:src="@{/lib/waypoints/waypoints.min.js}"></script>
-<script th:src="@{/lib/owlcarousel/owl.carousel.min.js}"></script>
-<script th:src="@{/lib/tempusdominus/js/moment.min.js}"></script>
-<script th:src="@{/lib/tempusdominus/js/moment-timezone.min.js}"></script>
-<script th:src="@{/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js}"></script>
-<script th:src="@{/js/main.js}"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
-<script th:inline="javascript">
-/*<![CDATA[*/
-try {
-    console.log("Total Users:", /*[[${totalUsers}]]*/ 0);
-    console.log("Daily Users:", /*[[${dailyUsers}]]*/ 0);
-    console.log("Daily Revenue:", /*[[${dailyRevenue}]]*/ 0);
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/lib/easing/easing.min.js}"></script>
+    <script th:src="@{/lib/waypoints/waypoints.min.js}"></script>
+    <script th:src="@{/lib/owlcarousel/owl.carousel.min.js}"></script>
+    <script th:src="@{/lib/tempusdominus/js/moment.min.js}"></script>
+    <script th:src="@{/lib/tempusdominus/js/moment-timezone.min.js}"></script>
+    <script th:src="@{/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js}"></script>
+    <script th:src="@{/js/main.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        try {
+            console.log("Total Users:", /*[[${totalUsers}]]*/ 0);
+            console.log("Daily Users:", /*[[${dailyUsers}]]*/ 0);
+            console.log("Daily Revenue:", /*[[${dailyRevenue}]]*/ 0);
 
-    var totalUsers = Number(/*[[${totalUsers}]]*/ 0) || 0;
-    var totalBookings = Number(/*[[${totalBookings}]]*/ 0) || 0;
-    var totalCoaches = Number(/*[[${totalCoaches}]]*/ 0) || 0;
-    var totalFeedbacks = Number(/*[[${totalFeedbacks}]]*/ 0) || 0;
+            var totalUsers = Number(/*[[${totalUsers}]]*/ 0) || 0;
+            var totalBookings = Number(/*[[${totalBookings}]]*/ 0) || 0;
+            var totalCoaches = Number(/*[[${totalCoaches}]]*/ 0) || 0;
+            var totalFeedbacks = Number(/*[[${totalFeedbacks}]]*/ 0) || 0;
 
-    var dailyUsers = Number(/*[[${dailyUsers}]]*/ 0) || 0;
-    var dailyBookings = Number(/*[[${dailyBookings}]]*/ 0) || 0;
-    var dailyCoaches = Number(/*[[${dailyCoaches}]]*/ 0) || 0;
-    var dailyFeedbacks = Number(/*[[${dailyFeedbacks}]]*/ 0) || 0;
+            var totalSwimClasses = Number(/*[[${totalSwimClasses}]]*/ 0) || 0;
+            var dailySwimClasses = Number(/*[[${dailySwimClasses}]]*/ 0) || 0;
 
-    var dailyRevenue = Number(/*[[${dailyRevenue}]]*/ 0) || 0;
-    var monthlyRevenue = Number(/*[[${monthlyRevenue}]]*/ 0) || 0;
-    var quarterlyRevenue = Number(/*[[${quarterlyRevenue}]]*/ 0) || 0;
-    var yearlyRevenue = Number(/*[[${yearlyRevenue}]]*/ 0) || 0;
 
-    var ctx = document.getElementById('dashboard-chart');
-    if (!ctx) {
-        console.error("Canvas element 'dashboard-chart' not found!");
-    } else {
-        var myChart = new Chart(ctx.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: ['Người dùng', 'Vé đã đặt', 'Huấn luyện viên', 'Phản hồi'],
-                datasets: [{
-                    label: 'Số lượng',
-                    data: [totalUsers, totalBookings, totalCoaches, totalFeedbacks],
-                    backgroundColor: [
-                        'rgba(54, 162, 235, 0.6)',
-                        'rgba(75, 192, 192, 0.6)',
-                        'rgba(255, 206, 86, 0.6)',
-                        'rgba(153, 102, 255, 0.6)'
-                    ],
-                    borderColor: [
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(153, 102, 255, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: 'Số lượng' } },
-                    x: { title: { display: true, text: 'Danh mục' } }
-                },
-                plugins: {
-                    legend: { display: true, position: 'top' }
-                }
-            }
-        });
+            var dailyUsers = Number(/*[[${dailyUsers}]]*/ 0) || 0;
+            var dailyBookings = Number(/*[[${dailyBookings}]]*/ 0) || 0;
+            var dailyCoaches = Number(/*[[${dailyCoaches}]]*/ 0) || 0;
+            var dailyFeedbacks = Number(/*[[${dailyFeedbacks}]]*/ 0) || 0;
 
-        function updateChart(type) {
-            if (myChart) myChart.destroy();
-            var data, labels;
-            if (type === 'dailyStats') {
-                data = [dailyUsers, dailyBookings, dailyCoaches, dailyFeedbacks];
-                labels = ['Người dùng (hôm nay)', 'Vé đã đặt (hôm nay)', 'Huấn luyện viên (hôm nay)', 'Phản hồi (hôm nay)'];
+            var dailyRevenue = Number(/*[[${dailyRevenue}]]*/ 0) || 0;
+            var monthlyRevenue = Number(/*[[${monthlyRevenue}]]*/ 0) || 0;
+            var quarterlyRevenue = Number(/*[[${quarterlyRevenue}]]*/ 0) || 0;
+            var yearlyRevenue = Number(/*[[${yearlyRevenue}]]*/ 0) || 0;
+
+            var ctx = document.getElementById('dashboard-chart');
+            if (!ctx) {
+                console.error("Canvas element 'dashboard-chart' not found!");
             } else {
-                data = [totalUsers, totalBookings, totalCoaches, totalFeedbacks];
-                labels = ['Người dùng', 'Vé đã đặt', 'Huấn luyện viên', 'Phản hồi'];
-            }
-            myChart = new Chart(ctx.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Số lượng',
-                        data: data,
-                        backgroundColor: [
-                            'rgba(54, 162, 235, 0.6)',
-                            'rgba(75, 192, 192, 0.6)',
-                            'rgba(255, 206, 86, 0.6)',
-                            'rgba(153, 102, 255, 0.6)'
-                        ],
-                        borderColor: [
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(153, 102, 255, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, title: { display: true, text: 'Số lượng' } },
-                        x: { title: { display: true, text: 'Danh mục' } }
+                var myChart = new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: ['Người dùng', 'Vé đã đặt', 'Huấn luyện viên', 'Phản hồi'],
+                        datasets: [{
+                            label: 'Số lượng',
+                            data: [totalUsers, totalBookings, totalCoaches, totalFeedbacks],
+                            backgroundColor: [
+                                'rgba(54, 162, 235, 0.6)',
+                                'rgba(75, 192, 192, 0.6)',
+                                'rgba(255, 206, 86, 0.6)',
+                                'rgba(153, 102, 255, 0.6)'
+                            ],
+                            borderColor: [
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(153, 102, 255, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
                     },
-                    plugins: {
-                        legend: { display: true, position: 'top' }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, title: { display: true, text: 'Số lượng' } },
+                            x: { title: { display: true, text: 'Danh mục' } }
+                        },
+                        plugins: {
+                            legend: { display: true, position: 'top' }
+                        }
                     }
-                }
-            });
-        }
+                });
 
-        function updateRevenueChart(type) {
-            if (myChart) myChart.destroy();
-            var data, labels;
-            if (type === 'daily') {
-                data = [dailyRevenue];
-                labels = ['Doanh thu (hôm nay)'];
-            } else if (type === 'monthly') {
-                data = [monthlyRevenue];
-                labels = ['Doanh thu (tháng này)'];
-            } else if (type === 'quarterly') {
-                data = [quarterlyRevenue];
-                labels = ['Doanh thu (quý này)'];
-            } else {
-                data = [yearlyRevenue];
-                labels = ['Doanh thu (năm nay)'];
+                function updateChart(type) {
+                    if (myChart) myChart.destroy();
+                    var data, labels;
+                    if (type === 'dailyStats') {
+                        data = [dailyUsers, dailyBookings, dailyCoaches, dailyFeedbacks];
+                        labels = ['Người dùng (hôm nay)', 'Vé đã đặt (hôm nay)', 'Huấn luyện viên (hôm nay)', 'Phản hồi (hôm nay)'];
+                    } else {
+                        data = [totalUsers, totalBookings, totalCoaches, totalFeedbacks];
+                        labels = ['Người dùng', 'Vé đã đặt', 'Huấn luyện viên', 'Phản hồi'];
+                    }
+                    myChart = new Chart(ctx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Số lượng',
+                                data: data,
+                                backgroundColor: [
+                                    'rgba(54, 162, 235, 0.6)',
+                                    'rgba(75, 192, 192, 0.6)',
+                                    'rgba(255, 206, 86, 0.6)',
+                                    'rgba(153, 102, 255, 0.6)'
+                                ],
+                                borderColor: [
+                                    'rgba(54, 162, 235, 1)',
+                                    'rgba(75, 192, 192, 1)',
+                                    'rgba(255, 206, 86, 1)',
+                                    'rgba(153, 102, 255, 1)'
+                                ],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { beginAtZero: true, title: { display: true, text: 'Số lượng' } },
+                                x: { title: { display: true, text: 'Danh mục' } }
+                            },
+                            plugins: {
+                                legend: { display: true, position: 'top' }
+                            }
+                        }
+                    });
+                }
+
+                function updateRevenueChart(type) {
+                    if (myChart) myChart.destroy();
+                    var data, labels;
+                    if (type === 'daily') {
+                        data = [dailyRevenue];
+                        labels = ['Doanh thu (hôm nay)'];
+                    } else if (type === 'monthly') {
+                        data = [monthlyRevenue];
+                        labels = ['Doanh thu (tháng này)'];
+                    } else if (type === 'quarterly') {
+                        data = [quarterlyRevenue];
+                        labels = ['Doanh thu (quý này)'];
+                    } else {
+                        data = [yearlyRevenue];
+                        labels = ['Doanh thu (năm nay)'];
+                    }
+                    myChart = new Chart(ctx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Doanh thu (VNĐ)',
+                                data: data,
+                                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { beginAtZero: true, title: { display: true, text: 'Doanh thu (VNĐ)' } },
+                                x: { title: { display: true, text: 'Thời gian' } }
+                            },
+                            plugins: {
+                                legend: { display: true, position: 'top' }
+                            }
+                        }
+                    });
+                }
+
+                document.getElementById('statsType').addEventListener('change', function () {
+                    updateChart(this.value);
+                });
+
+                document.getElementById('revenueType').addEventListener('change', function () {
+                    updateRevenueChart(this.value);
+                });
+
+                $('#datePicker').datepicker({
+                    format: 'yyyy-mm-dd',
+                    autoclose: true,
+                    todayHighlight: true
+                }).on('changeDate', function (e) {
+                    var selectedDate = $(this).val();
+                    window.location.href = '/dashboard?date=' + selectedDate;
+                });
             }
-            myChart = new Chart(ctx.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Doanh thu (VNĐ)',
-                        data: data,
-                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: { beginAtZero: true, title: { display: true, text: 'Doanh thu (VNĐ)' } },
-                        x: { title: { display: true, text: 'Thời gian' } }
-                    },
-                    plugins: {
-                        legend: { display: true, position: 'top' }
-                    }
-                }
-            });
+        } catch (e) {
+            console.error("Error rendering chart:", e);
         }
-
-        document.getElementById('statsType').addEventListener('change', function() {
-            updateChart(this.value);
-        });
-
-        document.getElementById('revenueType').addEventListener('change', function() {
-            updateRevenueChart(this.value);
-        });
-
-        $('#datePicker').datepicker({
-            format: 'yyyy-mm-dd',
-            autoclose: true,
-            todayHighlight: true
-        }).on('changeDate', function(e) {
-            var selectedDate = $(this).val();
-            window.location.href = '/dashboard?date=' + selectedDate;
-        });
-    }
-} catch (e) {
-    console.error("Error rendering chart:", e);
-}
-/*]]>*/
-</script>
+        /*]]>*/
+    </script>
 </body>
+
 </html>
