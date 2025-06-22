@@ -33,8 +33,6 @@ if (auth != null) {
             model.addAttribute("name", name);
         }
     }
-
-
         return "homepage/homepage";
     }
 

@@ -44,6 +44,11 @@ public class UserService {
         }
     }
 
+    public User getUserById(String id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + id));
+    }
+
     public List<User> getUsersByDate(LocalDate date) {
         try {
             LocalDateTime startOfDay = date.atStartOfDay();
@@ -94,12 +99,12 @@ public class UserService {
     public User updateUser(Integer userId, User updatedUser, String roleName) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        if (!user.getUsername().equals(updatedUser.getUsername()) && 
-            userRepository.existsByUsername(updatedUser.getUsername())) {
+        if (!user.getUsername().equals(updatedUser.getUsername()) &&
+                userRepository.existsByUsername(updatedUser.getUsername())) {
             throw new RuntimeException("Username already exists");
         }
-        if (!user.getEmail().equals(updatedUser.getEmail()) && 
-            userRepository.existsByEmail(updatedUser.getEmail())) {
+        if (!user.getEmail().equals(updatedUser.getEmail()) &&
+                userRepository.existsByEmail(updatedUser.getEmail())) {
             throw new RuntimeException("Email already exists");
         }
         Role role = roleRepository.findByRoleName(roleName)

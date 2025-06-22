@@ -1,10 +1,7 @@
 package com.example.kingpool.controller;
 
 import com.example.kingpool.entity.User;
-import com.example.kingpool.service.AuthService;
-import com.example.kingpool.service.BookingService;
-import com.example.kingpool.service.FeedbackService;
-import com.example.kingpool.service.UserService;
+import com.example.kingpool.service.*;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,9 +34,14 @@ public class DashboardController {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private SwimClassService swimClassService; // ✅ thêm service lớp học bơi
+
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication authentication, HttpSession session,
-                            @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+                            @RequestParam(value = "date", required = false)
+                            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+
         if (authentication == null || !authentication.isAuthenticated()) {
             logger.warn("Unauthenticated access to dashboard, redirecting to login.");
             return "redirect:/login";
@@ -56,31 +58,42 @@ public class DashboardController {
         long totalCoaches = userService.getAllCoaches().size();
         long totalBookings = bookingService.getAllBookings().size();
         long totalFeedbacks = feedbackService.getAllFeedbacks().size();
+        long totalSwimClasses = swimClassService.getAllSwimClasses().size(); // ✅ tổng số lớp học bơi
 
         Map<String, Long> dailyStats = new HashMap<>();
         try {
-            dailyStats.put("usersToday", userService.getUsersByDate(selectedDate) != null ? (long) userService.getUsersByDate(selectedDate).size() : 0L);
-            dailyStats.put("bookingsToday", bookingService.getBookingsByDate(selectedDate) != null ? (long) bookingService.getBookingsByDate(selectedDate).size() : 0L);
-            dailyStats.put("coachesToday", userService.getCoachesByDate(selectedDate) != null ? (long) userService.getCoachesByDate(selectedDate).size() : 0L);
-            dailyStats.put("feedbacksToday", feedbackService.getFeedbacksByDate(selectedDate) != null ? (long) feedbackService.getFeedbacksByDate(selectedDate).size() : 0L);
+            dailyStats.put("usersToday", userService.getUsersByDate(selectedDate) != null
+                    ? (long) userService.getUsersByDate(selectedDate).size() : 0L);
+            dailyStats.put("bookingsToday", bookingService.getBookingsByDate(selectedDate) != null
+                    ? (long) bookingService.getBookingsByDate(selectedDate).size() : 0L);
+            dailyStats.put("coachesToday", userService.getCoachesByDate(selectedDate) != null
+                    ? (long) userService.getCoachesByDate(selectedDate).size() : 0L);
+            dailyStats.put("feedbacksToday", feedbackService.getFeedbacksByDate(selectedDate) != null
+                    ? (long) feedbackService.getFeedbacksByDate(selectedDate).size() : 0L);
+            dailyStats.put("swimClassesToday", swimClassService.getSwimClassesByDate(selectedDate) != null
+                    ? (long) swimClassService.getSwimClassesByDate(selectedDate).size() : 0L); // ✅ lớp học bơi hôm nay
         } catch (Exception e) {
             logger.error("Error fetching daily statistics: {}", e.getMessage(), e);
             dailyStats.put("usersToday", 0L);
             dailyStats.put("bookingsToday", 0L);
             dailyStats.put("coachesToday", 0L);
             dailyStats.put("feedbacksToday", 0L);
+            dailyStats.put("swimClassesToday", 0L);
         }
 
         Map<String, Double> revenueStats = new HashMap<>();
         revenueStats.put("dailyRevenue", bookingService.getRevenueByDate(selectedDate));
-        revenueStats.put("monthlyRevenue", bookingService.getRevenueByMonth(selectedDate.getMonthValue(), selectedDate.getYear()));
-        revenueStats.put("quarterlyRevenue", bookingService.getRevenueByQuarter((selectedDate.getMonthValue() - 1) / 3 + 1, selectedDate.getYear()));
+        revenueStats.put("monthlyRevenue", bookingService.getRevenueByMonth(
+                selectedDate.getMonthValue(), selectedDate.getYear()));
+        revenueStats.put("quarterlyRevenue", bookingService.getRevenueByQuarter(
+                (selectedDate.getMonthValue() - 1) / 3 + 1, selectedDate.getYear()));
         revenueStats.put("yearlyRevenue", bookingService.getRevenueByYear(selectedDate.getYear()));
 
         model.addAttribute("totalUsers", totalUsers);
         model.addAttribute("totalBookings", totalBookings);
         model.addAttribute("totalCoaches", totalCoaches);
         model.addAttribute("totalFeedbacks", totalFeedbacks);
+        model.addAttribute("totalSwimClasses", totalSwimClasses); 
         model.addAttribute("dailyStats", dailyStats);
         model.addAttribute("revenueStats", revenueStats);
         model.addAttribute("selectedDate", selectedDate);
