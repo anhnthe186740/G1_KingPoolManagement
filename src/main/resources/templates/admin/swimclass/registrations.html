@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Quản lý đăng ký lớp học</title>
@@ -7,93 +7,228 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Roboto', sans-serif; }
-        .btn-primary { background-color: #007bff; border-color: #007bff; }
-        .btn-primary:hover { background-color: #0056b3; border-color: #0056b3; }
+        body { font-family: 'Roboto', sans-serif; background-color: #f8f9fa; }
+        .table-responsive { margin-top: 20px; }
+        .alert { margin-bottom: 20px; }
+        .btn-sm { transition: all 0.2s; }
+        .btn-sm:hover { transform: translateY(-1px); }
+        .search-box { max-width: 300px; }
+        .modal-header { background-color: #343a40; color: white; }
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 1050; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">Quản lý lớp học bơi</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="/admin/swim-classes">Danh sách lớp</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="#" th:href="@{/admin/swim-classes/{id}/registrations(id=${classId})}">Quản lý đăng ký</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="#">Quản lý đăng ký</a></li>
                     <li class="nav-item"><a class="nav-link" href="/logout">Đăng xuất</a></li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-5 pt-5">
-        <h1 class="mb-4 text-center">Quản lý đăng ký lớp học</h1>
-        <h4 th:text="'Lớp học ID: ' + ${classId}"></h4>
+    <div class="container mt-5">
+        <h1 class="mb-4">Quản lý đăng ký lớp học - Lớp ID: <span th:text="${classId}"></span></h1>
 
-        <!-- Alert thông báo -->
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-        <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+        <!-- Thông báo -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
 
-        <!-- FORM THÊM HỌC VIÊN THỦ CÔNG -->
-        <div class="card my-4">
-            <div class="card-header">Thêm học viên thủ công</div>
+        <!-- Thông tin giới hạn học viên -->
+        <div class="card mb-4">
             <div class="card-body">
-                <form method="post" th:action="@{/admin/swim-classes/{id}/registrations/add(id=${classId})}">
-                    <div class="mb-3">
-                        <label for="studentId" class="form-label">Chọn học viên</label>
-                        <select class="form-select" id="studentId" name="studentId" required>
-                            <option th:each="student : ${students}" 
-                                    th:value="${student.userId}" 
-                                    th:text="${student.name}">Tên học viên</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Thêm học viên</button>
-                </form>
+                <p class="mb-0">Sĩ số tối đa: <strong th:text="${maxStudents}"></strong> | Sĩ số hiện tại: <strong th:text="${currentStudents}"></strong></p>
+                <p th:if="${currentStudents >= maxStudents}" class="text-danger mb-0">Lớp đã đầy, không thể thêm học viên!</p>
             </div>
         </div>
 
-        <!-- Danh sách đăng ký -->
-        <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Học viên</th>
-                        <th>Ngày đăng ký</th>
-                        <th>Trạng thái</th>
-                        <th>Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="registration : ${registrations}">
-                        <td th:text="${registration.registrationId}"></td>
-                        <td th:text="${registration.user.name}"></td>
-                        <td th:text="${#temporals.format(registration.registrationDate, 'dd/MM/yyyy HH:mm')}"></td>
-                        <td th:text="${registration.status}"></td>
-                        <td>
-                            <form th:action="@{/admin/swim-classes/registrations/confirm/{id}(id=${registration.registrationId})}" method="post" style="display:inline;">
-                                <input type="hidden" name="classId" th:value="${classId}">
-                                <button type="submit" class="btn btn-success btn-sm"
-                                        th:disabled="${registration.status != 'Pending'}">Xác nhận</button>
-                            </form>
-                            <form th:action="@{/admin/swim-classes/registrations/cancel/{id}(id=${registration.registrationId})}" method="post" style="display:inline;">
-                                <input type="hidden" name="classId" th:value="${classId}">
-                                <input type="text" name="cancelReason" placeholder="Lý do hủy" required class="form-control form-control-sm d-inline-block w-50">
-                                <button type="submit" class="btn btn-danger btn-sm"
-                                        th:disabled="${registration.status == 'Cancelled'}">Hủy</button>
-                            </form>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- Form thêm học viên thủ công -->
+        <div class="card mb-4">
+            <div class="card-header"><i class="bi bi-person-plus me-2"></i>Thêm học viên thủ công</div>
+            <div class="card-body">
+                <form th:action="@{/admin/swim-classes/{id}/registrations/add(id=${classId})}" method="post" th:if="${currentStudents < maxStudents}">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-6">
+                            <label for="studentId" class="form-label">Chọn học viên</label>
+                            <select id="studentId" name="studentId" class="form-select" required>
+                                <option value="">Chọn học viên</option>
+                                <option th:each="student : ${students}" th:value="${student.userId}" th:text="${student.name + ' (' + student.email + ')'}"></option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100"><i class="bi bi-plus-circle me-1"></i>Thêm</button>
+                        </div>
+                    </div>
+                </form>
+                <p th:if="${currentStudents >= maxStudents}" class="text-warning mt-3">Không thể thêm học viên vì lớp đã đầy.</p>
+            </div>
         </div>
 
-        <a th:href="@{/admin/swim-classes}" class="btn btn-secondary">⬅ Quay lại danh sách lớp học</a>
+        <!-- Danh sách học viên -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-list-ul me-2"></i>Danh sách học viên hiện tại</span>
+                <input type="text" id="searchInput" class="form-control search-box" placeholder="Tìm kiếm học viên...">
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Họ tên</th>
+                                <th>Email</th>
+                                <th>Ngày đăng ký</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registrationTable">
+                            <tr th:each="reg : ${registrations}">
+                                <td th:text="${reg.registrationId}"></td>
+                                <td th:text="${reg.user.name}"></td>
+                                <td th:text="${reg.user.email}"></td>
+                                <td th:text="${#temporals.format(reg.registrationDate, 'yyyy-MM-dd HH:mm')}"></td>
+                                <td>
+                                    <span th:class="${reg.status == 'CONFIRMED'} ? 'badge bg-success' : (${reg.status == 'PENDING'} ? 'badge bg-warning' : 'badge bg-danger')" th:text="${reg.status}"></span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <form th:action="@{/admin/swim-classes/registrations/confirm/{id}(id=${reg.registrationId})}" method="post" th:if="${reg.status == 'PENDING'}">
+                                            <input type="hidden" name="classId" th:value="${classId}" />
+                                            <button type="submit" class="btn btn-success btn-sm" data-bs-tooltip="tooltip" title="Xác nhận đăng ký"><i class="bi bi-check-circle me-1"></i>Xác nhận</button>
+                                        </form>
+                                        <button th:if="${reg.status == 'PENDING'}" class="btn btn-danger btn-sm" data-bs-toggle="modal" th:attr="data-bs-target='#cancelModal' + ${reg.registrationId}" data-bs-tooltip="tooltip" title="Hủy đăng ký">
+                                            <i class="bi bi-x-circle me-1"></i>Hủy
+                                        </button>
+                                        <button th:if="${reg.status == 'CONFIRMED'}" class="btn btn-warning btn-sm" data-bs-toggle="modal" th:attr="data-bs-target='#removeModal' + ${reg.registrationId}" data-bs-tooltip="tooltip" title="Xóa học viên khỏi lớp">
+                                            <i class="bi bi-person-dash me-1"></i>Xóa
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(registrations)}">
+                                <td colspan="6" class="text-center">Không có học viên nào.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal hủy đăng ký -->
+        <div th:each="reg : ${registrations}" th:if="${reg.status == 'PENDING'}" class="modal fade" th:id="'cancelModal' + ${reg.registrationId}" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="cancelModalLabel">Xác nhận hủy đăng ký</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form th:action="@{/admin/swim-classes/registrations/cancel/{id}(id=${reg.registrationId})}" method="post">
+                        <div class="modal-body">
+                            <p>Bạn có chắc muốn hủy đăng ký của <strong th:text="${reg.user.name}"></strong>?</p>
+                            <div class="mb-3">
+                                <label for="cancelReason" class="form-label">Lý do hủy</label>
+                                <input type="text" name="cancelReason" class="form-control" id="cancelReason" required>
+                            </div>
+                            <input type="hidden" name="classId" th:value="${classId}" />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                            <button type="submit" class="btn btn-danger">Hủy đăng ký</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal xóa học viên -->
+        <div th:each="reg : ${registrations}" th:if="${reg.status == 'CONFIRMED'}" class="modal fade" th:id="'removeModal' + ${reg.registrationId}" tabindex="-1" aria-labelledby="removeModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="removeModalLabel">Xác nhận xóa học viên</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form th:action="@{/admin/swim-classes/registrations/remove/{id}(id=${reg.registrationId})}" method="post">
+                        <div class="modal-body">
+                            <p>Bạn có chắc muốn xóa <strong th:text="${reg.user.name}"></strong> khỏi lớp học?</p>
+                            <div class="mb-3">
+                                <label for="removeReason" class="form-label">Lý do xóa</label>
+                                <input type="text" name="removeReason" class="form-control" id="removeReason" required>
+                            </div>
+                            <input type="hidden" name="classId" th:value="${classId}" />
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                            <button type="submit" class="btn btn-warning">Xóa học viên</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <a href="/admin/swim-classes" class="btn btn-secondary mt-4"><i class="bi bi-arrow-left me-1"></i>Quay lại danh sách lớp học</a>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container">
+        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" th:text="${success}"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+        <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" th:text="${error}"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Tìm kiếm học viên
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            let searchValue = this.value.toLowerCase();
+            let rows = document.querySelectorAll('#registrationTable tr:not(:last-child)');
+            rows.forEach(row => {
+                let name = row.cells[1].textContent.toLowerCase();
+                let email = row.cells[2].textContent.toLowerCase();
+                row.style.display = (name.includes(searchValue) || email.includes(searchValue)) ? '' : 'none';
+            });
+        });
+
+        // Hiển thị toast thông báo
+        const success = /*[[${success}]]*/ null;
+        const error = /*[[${error}]]*/ null;
+
+        if (success) {
+            let toast = new bootstrap.Toast(document.getElementById('successToast'));
+            toast.show();
+        }
+        if (error) {
+            let toast = new bootstrap.Toast(document.getElementById('errorToast'));
+            toast.show();
+        }
+
+        // Khởi tạo tooltip
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-tooltip="tooltip"]');
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+    </script>
 </body>
 </html>

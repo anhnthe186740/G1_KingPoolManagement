@@ -2,8 +2,10 @@ package com.example.kingpool.service;
 
 import com.example.kingpool.entity.ClassSchedule;
 import com.example.kingpool.entity.SwimClass;
+import com.example.kingpool.entity.SwimClassRegistration;
 import com.example.kingpool.entity.User;
 import com.example.kingpool.repository.ClassScheduleRepository;
+import com.example.kingpool.repository.SwimClassRegistrationRepository;
 import com.example.kingpool.repository.SwimClassRepository;
 import com.example.kingpool.repository.UserRepository;
 import jakarta.validation.Valid;
@@ -27,6 +29,9 @@ public class SwimClassService {
 
     @Autowired
     private ClassScheduleRepository classScheduleRepository;
+
+    @Autowired
+    private SwimClassRegistrationRepository registrationRepository;
 
     @Autowired
     private UserRepository userRepository;
@@ -61,13 +66,28 @@ public class SwimClassService {
         return result;
     }
 
-    // ✔ Chỉ dùng nếu không cần lịch học
+    public List<SwimClass> getUserClasses(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Học viên không tồn tại."));
+        List<SwimClassRegistration> registrations = registrationRepository.findByUserUserId(user.getUserId());
+        List<SwimClass> userClasses = new ArrayList<>();
+        for (SwimClassRegistration reg : registrations) {
+            if ("CONFIRMED".equalsIgnoreCase(reg.getStatus())) {
+                SwimClass swimClass = swimClassRepository.findByIdWithSchedules(reg.getSwimClass().getClassId())
+                        .orElse(null);
+                if (swimClass != null && !userClasses.contains(swimClass)) {
+                    userClasses.add(swimClass);
+                }
+            }
+        }
+        return userClasses;
+    }
+
     public SwimClass getSwimClassById(Integer id) {
         return swimClassRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Lớp học không tồn tại"));
     }
 
-    // ✔ Dùng khi cần lấy cả lịch học
     public SwimClass getSwimClassWithSchedules(Integer id) {
         return swimClassRepository.findByIdWithSchedules(id)
                 .orElseThrow(() -> new IllegalArgumentException("Lớp học không tồn tại"));
@@ -151,10 +171,8 @@ public class SwimClassService {
         existingClass.setMaxStudents(maxStudents);
         existingClass.setDescription(description);
 
-        // Xóa lịch học cũ
         classScheduleRepository.deleteAll(existingClass.getSchedules());
 
-        // Tạo lịch học mới
         List<ClassSchedule> newSchedules = generateSchedules(studyDays, startDate, durationWeeks, classTime, duration);
         newSchedules.forEach(schedule -> schedule.setSwimClass(existingClass));
         existingClass.setSchedules(newSchedules);
@@ -166,6 +184,9 @@ public class SwimClassService {
     public void deleteSwimClass(Integer id) {
         SwimClass swimClass = swimClassRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Lớp học không tồn tại"));
+
+        registrationRepository.deleteBySwimClassClassId(id);
+        classScheduleRepository.deleteAll(swimClass.getSchedules());
         swimClassRepository.delete(swimClass);
     }
 

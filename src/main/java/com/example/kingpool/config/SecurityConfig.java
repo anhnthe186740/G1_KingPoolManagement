@@ -22,8 +22,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 
-
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -47,10 +45,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/homepage", "/login", "/register", "/forgot", "/forgot/**").permitAll()
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
-                .requestMatchers("/css/**", "/js/**", "/img/**", "/js/**", "/lib/**", "/scss/**").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/img/**", "/lib/**", "/scss/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/forgot/resend").permitAll()
                 .requestMatchers("/dashboard", "/admin/**").hasRole("ADMIN")
-                .requestMatchers("/user-homepage", "/api/auth/profile").authenticated()
+                .requestMatchers("/user-homepage", "/api/auth/profile", "/user/swim-classes/**").hasRole("USER")
                 .anyRequest().authenticated())
             .formLogin(form -> form
                 .loginPage("/login")
@@ -64,21 +62,13 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID", "remember-me")
                 .permitAll());
+           
 
         return http.build();
     }
 
-    @Bean
-    public PersistentTokenRepository persistentTokenRepository() {
-        JdbcTokenRepositoryImpl tokenRepository = new JdbcTokenRepositoryImpl();
-        tokenRepository.setDataSource(dataSource);
-        // Uncomment if first run to create table
-        // tokenRepository.setCreateTableOnStartup(true);
-        return tokenRepository;
-    }
-  //
+   
 
     @Bean
     public PasswordEncoder passwordEncoder() {
