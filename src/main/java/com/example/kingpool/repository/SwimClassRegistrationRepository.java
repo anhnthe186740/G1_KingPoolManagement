@@ -13,6 +13,7 @@ public interface SwimClassRegistrationRepository extends JpaRepository<SwimClass
 
     List<SwimClassRegistration> findByUserUserId(Integer userId);
 
-     List<SwimClassRegistration> findBySwimClass_ClassIdAndStatus(Integer classId, String status);
+    List<SwimClassRegistration> findBySwimClass_ClassIdAndStatus(Integer classId, String status);
 
+    void deleteBySwimClassClassId(Integer classId);
 }

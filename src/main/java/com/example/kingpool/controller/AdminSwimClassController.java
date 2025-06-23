@@ -15,6 +15,8 @@ import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -168,10 +170,23 @@ public class AdminSwimClassController {
 
     @GetMapping("/{id}/registrations")
     public String viewRegistrations(@PathVariable Integer id, Model model) {
-        model.addAttribute("registrations", registrationService.getRegistrationsByClassId(id));
-        model.addAttribute("classId", id);
-        model.addAttribute("students", userRepository.findByRoleRoleName("USER"));
-        return "admin/swimclass/registrations";
+        try {
+            SwimClass swimClass = swimClassService.getSwimClassById(id);
+            if (swimClass == null) {
+                throw new IllegalArgumentException("Lớp học không tồn tại.");
+            }
+            // Đảm bảo currentStudents không âm và hợp lệ
+            int currentStudents = swimClass.getCurrentStudents() >= 0 ? swimClass.getCurrentStudents() : 0;
+            model.addAttribute("registrations", registrationService.getRegistrationsByClassId(id));
+            model.addAttribute("classId", id);
+            model.addAttribute("students", userRepository.findByRoleRoleName("USER"));
+            model.addAttribute("maxStudents", swimClass.getMaxStudents());
+            model.addAttribute("currentStudents", currentStudents);
+            return "admin/swimclass/registrations";
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi khi tải danh sách đăng ký: " + e.getMessage());
+            return "admin/swimclass/registrations";
+        }
     }
 
     @PostMapping("/registrations/confirm/{registrationId}")
@@ -180,7 +195,7 @@ public class AdminSwimClassController {
                                       RedirectAttributes redirectAttributes) {
         try {
             registrationService.confirmRegistration(registrationId);
-            redirectAttributes.addFlashAttribute("success", "Xác nhận thành công.");
+            redirectAttributes.addFlashAttribute("success", "Xác nhận đăng ký thành công.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi xác nhận: " + e.getMessage());
         }
@@ -194,7 +209,7 @@ public class AdminSwimClassController {
                                      RedirectAttributes redirectAttributes) {
         try {
             registrationService.cancelRegistration(registrationId, cancelReason);
-            redirectAttributes.addFlashAttribute("success", "Hủy thành công.");
+            redirectAttributes.addFlashAttribute("success", "Hủy đăng ký thành công.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", "Lỗi hủy: " + e.getMessage());
         }
@@ -214,52 +229,119 @@ public class AdminSwimClassController {
         return "redirect:/admin/swim-classes/" + id + "/registrations";
     }
 
+    @PostMapping("/registrations/remove/{registrationId}")
+    public String removeStudentFromClass(@PathVariable Integer registrationId,
+                                        @RequestParam Integer classId,
+                                        @RequestParam String removeReason,
+                                        RedirectAttributes redirectAttributes) {
+        try {
+            registrationService.removeStudentFromClass(registrationId, removeReason);
+            redirectAttributes.addFlashAttribute("success", "Xóa học viên khỏi lớp thành công.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi khi xóa học viên: " + e.getMessage());
+        }
+        return "redirect:/admin/swim-classes/" + classId + "/registrations";
+    }
+
     @GetMapping("/edit/{id}")
-public String showEditForm(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
-    try {
-        SwimClass swimClass = swimClassService.getSwimClassWithSchedules(id);
-        model.addAttribute("swimClass", swimClass);
-        model.addAttribute("coaches", userRepository.findByRoleRoleName("COACH"));
-        model.addAttribute("daysOfWeek", List.of(DayOfWeek.values()));
-        return "admin/swimclass/edit";
-    } catch (Exception e) {
-        redirectAttributes.addFlashAttribute("error", "Không tìm thấy lớp học.");
-        return "redirect:/admin/swim-classes";
+    public String showEditForm(@PathVariable Integer id, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            SwimClass swimClass = swimClassService.getSwimClassWithSchedules(id);
+            if (swimClass.getSchedules() != null) {
+                swimClass.setSchedules(new ArrayList<>(swimClass.getSchedules()));
+            }
+
+            LocalDate startDate = swimClass.getSchedules() != null && !swimClass.getSchedules().isEmpty()
+                    ? swimClass.getSchedules().get(0).getStartTime().toLocalDate()
+                    : null;
+            LocalTime classTime = swimClass.getSchedules() != null && !swimClass.getSchedules().isEmpty()
+                    ? swimClass.getSchedules().get(0).getStartTime().toLocalTime()
+                    : null;
+            List<DayOfWeek> studyDays = swimClass.getSchedules() != null && !swimClass.getSchedules().isEmpty()
+                    ? swimClass.getSchedules().stream()
+                            .map(schedule -> schedule.getStartTime().getDayOfWeek())
+                            .distinct()
+                            .toList()
+                    : new ArrayList<>();
+            Integer durationWeeks = swimClass.getSchedules() != null && !swimClass.getSchedules().isEmpty()
+                    ? (int) ChronoUnit.WEEKS.between(startDate, swimClass.getSchedules().get(swimClass.getSchedules().size() - 1).getStartTime().toLocalDate()) + 1
+                    : 4;
+            Integer durationMinutes = swimClass.getSchedules() != null && !swimClass.getSchedules().isEmpty()
+                    ? (int) Duration.between(swimClass.getSchedules().get(0).getStartTime(), swimClass.getSchedules().get(0).getEndTime()).toMinutes()
+                    : 45;
+
+            model.addAttribute("swimClass", swimClass);
+            model.addAttribute("coaches", userRepository.findByRoleRoleName("COACH"));
+            model.addAttribute("daysOfWeek", List.of(DayOfWeek.values()));
+            model.addAttribute("startDate", startDate != null ? startDate.toString() : "");
+            model.addAttribute("classTime", classTime != null ? classTime.toString() : "");
+            model.addAttribute("studyDays", studyDays);
+            model.addAttribute("durationWeeks", durationWeeks);
+            model.addAttribute("durationMinutes", durationMinutes);
+
+            return "admin/swimclass/edit";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Không tìm thấy lớp học.");
+            return "redirect:/admin/swim-classes";
+        }
     }
-}
+
     @PostMapping("/edit/{id}")
-public String updateSwimClass(@PathVariable Integer id,
-                              @RequestParam String name,
-                              @RequestParam Integer coachId,
-                              @RequestParam String level,
-                              @RequestParam Integer maxStudents,
-                              @RequestParam(required = false) String description,
-                              @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
-                              @RequestParam List<DayOfWeek> studyDays,
-                              @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime classTime,
-                              RedirectAttributes redirectAttributes,
-                              Model model) {
-    try {
-        User coach = userRepository.findById(coachId)
-                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy HLV"));
+    public String updateSwimClass(@PathVariable Integer id,
+                                  @RequestParam String name,
+                                  @RequestParam Integer coachId,
+                                  @RequestParam String level,
+                                  @RequestParam Integer maxStudents,
+                                  @RequestParam(required = false) String description,
+                                  @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+                                  @RequestParam List<DayOfWeek> studyDays,
+                                  @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime classTime,
+                                  @RequestParam Integer durationWeeks,
+                                  @RequestParam Integer durationMinutes,
+                                  RedirectAttributes redirectAttributes,
+                                  Model model) {
+        try {
+            if (name == null || name.trim().isEmpty()) {
+                throw new IllegalArgumentException("Tên lớp học không được để trống.");
+            }
+            if (coachId == null) {
+                throw new IllegalArgumentException("Vui lòng chọn huấn luyện viên.");
+            }
+            if (maxStudents < 1) {
+                throw new IllegalArgumentException("Số học viên tối đa phải lớn hơn 0.");
+            }
+            if (studyDays == null || studyDays.isEmpty()) {
+                throw new IllegalArgumentException("Vui lòng chọn ít nhất một ngày học.");
+            }
+            if (durationWeeks < 1) {
+                throw new IllegalArgumentException("Thời gian khóa học phải lớn hơn 0.");
+            }
+            if (durationMinutes < 1) {
+                throw new IllegalArgumentException("Thời gian mỗi buổi phải lớn hơn 0.");
+            }
 
-        int durationWeeks = 4; // default
-        Duration duration = Duration.ofMinutes(45); // default
+            User coach = userRepository.findById(coachId)
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy HLV"));
 
-        swimClassService.updateSwimClassWithSchedules(
-                id, name, coach, level, maxStudents, description,
-                studyDays, startDate, durationWeeks, classTime, duration);
+            Duration duration = Duration.ofMinutes(durationMinutes);
 
-        redirectAttributes.addFlashAttribute("success", "Cập nhật lớp học thành công.");
-        return "redirect:/admin/swim-classes";
-    } catch (Exception e) {
-        model.addAttribute("error", "Lỗi cập nhật: " + e.getMessage());
-        model.addAttribute("coaches", userRepository.findByRoleRoleName("COACH"));
-        model.addAttribute("daysOfWeek", List.of(DayOfWeek.values()));
-        return "admin/swimclass/edit";
+            swimClassService.updateSwimClassWithSchedules(
+                    id, name, coach, level, maxStudents, description,
+                    studyDays, startDate, durationWeeks, classTime, duration);
+
+            redirectAttributes.addFlashAttribute("success", "Cập nhật lớp học thành công.");
+            return "redirect:/admin/swim-classes";
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi cập nhật: " + e.getMessage());
+            model.addAttribute("swimClass", swimClassService.getSwimClassWithSchedules(id));
+            model.addAttribute("coaches", userRepository.findByRoleRoleName("COACH"));
+            model.addAttribute("daysOfWeek", List.of(DayOfWeek.values()));
+            model.addAttribute("startDate", startDate != null ? startDate.toString() : "");
+            model.addAttribute("classTime", classTime != null ? classTime.toString() : "");
+            model.addAttribute("studyDays", studyDays != null ? studyDays : new ArrayList<>());
+            model.addAttribute("durationWeeks", durationWeeks);
+            model.addAttribute("durationMinutes", durationMinutes);
+            return "admin/swimclass/edit";
+        }
     }
-}
-
-
-
 }
