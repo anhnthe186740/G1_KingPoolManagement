@@ -47,7 +47,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/img/**", "/lib/**", "/scss/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/forgot/resend").permitAll()
-                .requestMatchers("/dashboard", "/admin/**").hasRole("Admin")
+                .requestMatchers("/dashboard", "/admin/**").hasRole("ADMIN")
                 .requestMatchers("/user-homepage", "/api/auth/profile", "/user/swim-classes/**").hasRole("USER")
                 .anyRequest().authenticated())
             .formLogin(form -> form
