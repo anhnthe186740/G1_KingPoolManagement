@@ -12,12 +12,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDate;
+import java.util.*;
 
 @Controller
 @RequestMapping("/user/swim-classes")
@@ -63,32 +64,46 @@ public class UserSwimClassController {
         }
     }
 
+    @Transactional(readOnly = true)
     @GetMapping("/schedules")
     public String viewSchedules(Model model) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String username = auth.getName();
-            List<SwimClass> allClasses = swimClassService.getAllSwimClasses();
             List<SwimClass> userClasses = swimClassService.getUserClasses(username);
 
-            // Tạo danh sách lịch học phẳng
+            // Tạo danh sách lịch học phẳng từ tất cả các lớp của USER
             List<ClassSchedule> userSchedules = new ArrayList<>();
             for (SwimClass uc : userClasses) {
                 if (uc.getSchedules() != null) {
                     userSchedules.addAll(uc.getSchedules());
                 }
             }
-            List<ClassSchedule> allSchedules = new ArrayList<>();
-            for (SwimClass ac : allClasses) {
-                if (ac.getSchedules() != null) {
-                    allSchedules.addAll(ac.getSchedules());
-                }
+            log.info("Số lượng lịch học của USER {}: {}", username, userSchedules.size());
+            for (ClassSchedule schedule : userSchedules) {
+                log.debug("Lịch học: classId={}, name={}, startTime={}", 
+                          schedule.getSwimClass() != null ? schedule.getSwimClass().getClassId() : null,
+                          schedule.getSwimClass() != null ? schedule.getSwimClass().getName() : "null",
+                          schedule.getStartTime());
             }
 
-            log.info("Số lượng lịch học của USER {}: {}", username, userSchedules.size());
-            log.info("Số lượng tất cả lịch học: {}", allSchedules.size());
+            // Tính danh sách giờ duy nhất từ userSchedules
+            Set<String> uniqueHours = new TreeSet<>();
+            for (ClassSchedule schedule : userSchedules) {
+                if (schedule.getStartTime() != null && schedule.getSwimClass() != null) {
+                    uniqueHours.add(String.format("%02d", schedule.getStartTime().getHour()));
+                }
+            }
+            List<String> hours = new ArrayList<>(uniqueHours);
+            log.info("Số lượng giờ duy nhất: {}", hours.size());
+
+            if (userSchedules.isEmpty()) {
+                model.addAttribute("error", "Không tìm thấy lịch học nào cho tài khoản hiện tại.");
+            } else if (hours.isEmpty()) {
+                model.addAttribute("error", "Không tìm thấy giờ hợp lệ trong lịch học.");
+            }
+            model.addAttribute("hours", hours);
             model.addAttribute("userSchedules", userSchedules);
-            model.addAttribute("allSchedules", allSchedules);
             return "user/schedules";
         } catch (Exception e) {
             log.error("Lỗi khi tải lịch học: {}", e.getMessage(), e);

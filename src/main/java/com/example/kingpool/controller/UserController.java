@@ -18,21 +18,21 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/users")
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public String listUsers(Model model) {
         model.addAttribute("users", userService.getAllUsers());
         return "admin/user-list";
     }
 
     @GetMapping("/users/add")
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public String showAddUserForm(Model model) {
         model.addAttribute("user", new User());
         return "admin/user-form";
     }
 
     @PostMapping("/users/add")
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public String addUser(@Valid @ModelAttribute("user") User user, 
                           BindingResult result, 
                           @RequestParam("roleName") String roleName,
@@ -52,7 +52,7 @@ public class UserController {
     }
 
     @GetMapping("/users/edit/{id}")
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public String showEditUserForm(@PathVariable("id") Integer id, Model model) {
         User user = userService.getAllUsers().stream()
                 .filter(u -> u.getUserId().equals(id))
@@ -63,7 +63,7 @@ public class UserController {
     }
 
     @PostMapping("/users/edit/{id}")
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public String editUser(@PathVariable("id") Integer id, 
                            @Valid @ModelAttribute("user") User user, 
                            BindingResult result, 
@@ -84,7 +84,7 @@ public class UserController {
     }
 
     @PostMapping("/users/delete/{id}")
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public String deleteUser(@PathVariable("id") Integer id, RedirectAttributes redirectAttributes) {
         try {
             userService.deleteUser(id);
@@ -96,7 +96,7 @@ public class UserController {
     }
 
     @PostMapping("/users/change-role/{id}")
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public String changeUserRole(@PathVariable("id") Integer id, 
                                  @RequestParam("roleName") String roleName, 
                                  RedirectAttributes redirectAttributes) {
@@ -110,7 +110,7 @@ public class UserController {
     }
 
     @GetMapping("/users/view/{id}")
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public String viewUserDetails(@PathVariable("id") Integer id, Model model) {
         User user = userService.getAllUsers().stream()
                 .filter(u -> u.getUserId().equals(id))

@@ -36,7 +36,7 @@ public class UserService {
     public List<User> getAllCoaches() {
         try {
             return userRepository.findAll().stream()
-                    .filter(user -> "Coach".equals(user.getRole().getRoleName()))
+                    .filter(user -> "COACH".equals(user.getRole().getRoleName()))
                     .toList();
         } catch (Exception e) {
             logger.error("Error fetching all coaches: {}", e.getMessage());
@@ -65,7 +65,7 @@ public class UserService {
             LocalDateTime startOfDay = date.atStartOfDay();
             LocalDateTime endOfDay = date.atTime(23, 59, 59);
             return userRepository.findAll().stream()
-                    .filter(user -> "Coach".equals(user.getRole().getRoleName()) &&
+                    .filter(user -> "COACH".equals(user.getRole().getRoleName()) &&
                             user.getCreatedAt() != null &&
                             !user.getCreatedAt().isBefore(startOfDay) &&
                             !user.getCreatedAt().isAfter(endOfDay))
