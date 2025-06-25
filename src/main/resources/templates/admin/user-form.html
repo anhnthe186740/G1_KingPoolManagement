@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="utf-8">
     <title>KingPool - Thêm/Sửa người dùng</title>
@@ -19,6 +20,7 @@
             --light: #F3F6F9;
             --dark: #191C24;
         }
+
         .back-to-top {
             position: fixed;
             display: none;
@@ -26,25 +28,30 @@
             bottom: 45px;
             z-index: 99;
         }
+
         #spinner {
             opacity: 0;
             visibility: hidden;
             transition: opacity .5s ease-out, visibility 0s linear .5s;
             z-index: 99999;
         }
+
         #spinner.show {
             transition: opacity .5s ease-out, visibility 0s linear 0s;
             visibility: visible;
             opacity: 1;
         }
+
         .btn {
             transition: .5s;
         }
+
         .btn.btn-primary {
             color: #FFFFFF;
             background-color: var(--primary);
             border-color: var(--primary);
         }
+
         .sidebar {
             position: fixed;
             top: 0;
@@ -57,23 +64,48 @@
             transition: 0.5s;
             z-index: 999;
         }
+
         .content {
             margin-left: 250px;
             min-height: 100vh;
             background: #FFFFFF;
             transition: 0.5s;
         }
+
         @media (min-width: 992px) {
-            .sidebar { margin-left: 0; }
-            .sidebar.open { margin-left: -250px; }
-            .content { width: calc(100% - 250px); }
-            .content.open { width: 100%; margin-left: 0; }
+            .sidebar {
+                margin-left: 0;
+            }
+
+            .sidebar.open {
+                margin-left: -250px;
+            }
+
+            .content {
+                width: calc(100% - 250px);
+            }
+
+            .content.open {
+                width: 100%;
+                margin-left: 0;
+            }
         }
+
         @media (max-width: 991.98px) {
-            .sidebar { margin-left: -250px; }
-            .sidebar.open { margin-left: 0; }
-            .content { width: 100%; margin-left: 0; }
+            .sidebar {
+                margin-left: -250px;
+            }
+
+            .sidebar.open {
+                margin-left: 0;
+            }
+
+            .content {
+                width: 100%;
+                margin-left: 0;
+            }
         }
+
         .sidebar .navbar .navbar-nav .nav-link {
             padding: 7px 20px;
             color: var(--dark);
@@ -82,12 +114,14 @@
             border-radius: 0 30px 30px 0;
             outline: none;
         }
+
         .sidebar .navbar .navbar-nav .nav-link:hover,
         .sidebar .navbar .navbar-nav .nav-link.active {
             color: var(--primary);
             background: #FFFFFF;
             border-color: var(--primary);
         }
+
         .sidebar .navbar .navbar-nav .nav-link i {
             width: 40px;
             height: 40px;
@@ -97,16 +131,19 @@
             background: #FFFFFF;
             border-radius: 40px;
         }
+
         .content .navbar .navbar-nav .nav-link {
             margin-left: 25px;
             padding: 12px 0;
             color: var(--dark);
             outline: none;
         }
+
         .content .navbar .navbar-nav .nav-link:hover,
         .content .navbar .navbar-nav .nav-link.active {
             color: var(--primary);
         }
+
         .content .navbar .sidebar-toggler,
         .content .navbar .navbar-nav .nav-link i {
             width: 40px;
@@ -117,17 +154,39 @@
             background: #FFFFFF;
             border-radius: 40px;
         }
-        .text-primary { color: var(--primary) !important; }
-        .bg-light { background-color: var(--light) !important; }
-        .text-dark { color: var(--dark) !important; }
-        .form-label { font-weight: 500; }
-        .form-control, .form-select { border-radius: 5px; }
-        .error-message { color: red; font-size: 0.875em; }
+
+        .text-primary {
+            color: var(--primary) !important;
+        }
+
+        .bg-light {
+            background-color: var(--light) !important;
+        }
+
+        .text-dark {
+            color: var(--dark) !important;
+        }
+
+        .form-label {
+            font-weight: 500;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 5px;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 0.875em;
+        }
     </style>
 </head>
+
 <body>
     <div class="container-fluid position-relative bg-white d-flex p-0">
-        <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+        <div id="spinner"
+            class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
             <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
                 <span class="sr-only">Loading...</span>
             </div>
@@ -139,8 +198,12 @@
                 </a>
                 <div class="d-flex align-items-center ms-4 mb-4">
                     <div class="position-relative">
-                        <img class="rounded-circle" th:src="@{'/Uploads/' + ${session.image} ?: '/assets/img/default-profile.jpg'}" alt="" style="width: 40px; height: 40px;">
-                        <div class="bg-success rounded-circle border border-2 border-white position-absolute end-0 bottom-0 p-1"></div>
+                        <img class="rounded-circle"
+                            th:src="@{'/Uploads/' + ${session.image} ?: '/assets/img/default-profile.jpg'}" alt=""
+                            style="width: 40px; height: 40px;">
+                        <div
+                            class="bg-success rounded-circle border border-2 border-white position-absolute end-0 bottom-0 p-1">
+                        </div>
                     </div>
                     <div class="ms-3">
                         <h6 class="mb-0" th:text="${session.name} ?: 'Admin'"></h6>
@@ -148,10 +211,14 @@
                     </div>
                 </div>
                 <div class="navbar-nav w-100">
-                    <a href="/dashboard" class="nav-item nav-link"><i class="fa fa-tachometer-alt me-2"></i>Dashboard</a>
-                    <a href="/admin/users" class="nav-item nav-link active"><i class="fa fa-users me-2"></i>Quản lý người dùng</a>
-                    <a href="/admin/coaches" class="nav-item nav-link"><i class="fa fa-user-tie me-2"></i>Quản lý huấn luyện viên</a>
-                    <a href="/admin/feedbacks" class="nav-item nav-link"><i class="fa fa-comments me-2"></i>Quản lý phản hồi</a>
+                    <a href="/dashboard" class="nav-item nav-link"><i
+                            class="fa fa-tachometer-alt me-2"></i>Dashboard</a>
+                    <a href="/admin/users" class="nav-item nav-link active"><i class="fa fa-users me-2"></i>Quản lý
+                        người dùng</a>
+                    <a href="/admin/coaches" class="nav-item nav-link"><i class="fa fa-user-tie me-2"></i>Quản lý huấn
+                        luyện viên</a>
+                    <a href="/admin/feedbacks" class="nav-item nav-link"><i class="fa fa-comments me-2"></i>Quản lý phản
+                        hồi</a>
                 </div>
             </nav>
         </div>
@@ -183,7 +250,9 @@
                     </div>
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                            <img class="rounded-circle me-lg-2" th:src="@{'/Uploads/' + ${session.image} ?: '/assets/img/default-profile.jpg'}" alt="" style="width: 40px; height: 40px;">
+                            <img class="rounded-circle"
+                                th:src="@{${session.user != null && session.user.image != null} ? ('/Uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}"
+                                alt="Ảnh đại diện" style="width: 40px; height: 40px;">
                             <span class="d-none d-lg-inline-flex" th:text="${session.name} ?: 'Admin'"></span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
@@ -197,40 +266,48 @@
                 <div class="bg-light text-center rounded p-4">
                     <h6 class="mb-4" th:text="${user.userId != null} ? 'Sửa người dùng' : 'Thêm người dùng'"></h6>
                     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-                    <form th:action="${user.userId != null} ? @{/admin/users/edit/{id}(id=${user.userId})} : @{/admin/users/add}" th:object="${user}" method="post">
+                    <form
+                        th:action="${user.userId != null} ? @{/admin/users/edit/{id}(id=${user.userId})} : @{/admin/users/add}"
+                        th:object="${user}" method="post">
                         <div class="row mb-3">
                             <label class="col-sm-2 col-form-label">Họ và tên</label>
                             <div class="col-sm-10">
                                 <input type="text" class="form-control" th:field="*{name}" required>
-                                <div th:if="${#fields.hasErrors('name')}" class="error-message" th:errors="*{name}"></div>
+                                <div th:if="${#fields.hasErrors('name')}" class="error-message" th:errors="*{name}">
+                                </div>
                             </div>
                         </div>
                         <div class="row mb-3">
                             <label class="col-sm-2 col-form-label">Tên đăng nhập</label>
                             <div class="col-sm-10">
                                 <input type="text" class="form-control" th:field="*{username}" required>
-                                <div th:if="${#fields.hasErrors('username')}" class="error-message" th:errors="*{username}"></div>
+                                <div th:if="${#fields.hasErrors('username')}" class="error-message"
+                                    th:errors="*{username}"></div>
                             </div>
                         </div>
                         <div class="row mb-3">
                             <label class="col-sm-2 col-form-label">Mật khẩu</label>
                             <div class="col-sm-10">
-                                <input type="password" class="form-control" th:field="*{password}" th:required="${user.userId == null}">
-                                <div th:if="${#fields.hasErrors('password')}" class="error-message" th:errors="*{password}"></div>
+                                <input type="password" class="form-control" th:field="*{password}"
+                                    th:required="${user.userId == null}">
+                                <div th:if="${#fields.hasErrors('password')}" class="error-message"
+                                    th:errors="*{password}"></div>
                             </div>
                         </div>
                         <div class="row mb-3">
                             <label class="col-sm-2 col-form-label">Email</label>
                             <div class="col-sm-10">
                                 <input type="email" class="form-control" th:field="*{email}" required>
-                                <div th:if="${#fields.hasErrors('email')}" class="error-message" th:errors="*{email}"></div>
+                                <div th:if="${#fields.hasErrors('email')}" class="error-message" th:errors="*{email}">
+                                </div>
                             </div>
                         </div>
                         <div class="row mb-3">
                             <label class="col-sm-2 col-form-label">Số điện thoại</label>
                             <div class="col-sm-10">
                                 <input type="text" class="form-control" th:field="*{phoneNumber}">
-                                <div th:if="${#fields.hasErrors('phoneNumber')}" class="error-message" th:errors="*{phoneNumber}"></div>
+                                <div th:if="${#fields.hasErrors('phoneNumber')}" class="error-message"
+                                    th:errors="*{phoneNumber}"></div>
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -242,30 +319,39 @@
                                     <option value="F">Nữ</option>
                                     <option value="Other">Khác</option>
                                 </select>
-                                <div th:if="${#fields.hasErrors('gender')}" class="error-message" th:errors="*{gender}"></div>
+                                <div th:if="${#fields.hasErrors('gender')}" class="error-message" th:errors="*{gender}">
+                                </div>
                             </div>
                         </div>
                         <div class="row mb-3">
                             <label class="col-sm-2 col-form-label">Ngày sinh</label>
                             <div class="col-sm-10">
                                 <input type="date" class="form-control" th:field="*{dateOfBirth}">
-                                <div th:if="${#fields.hasErrors('dateOfBirth')}" class="error-message" th:errors="*{dateOfBirth}"></div>
+                                <div th:if="${#fields.hasErrors('dateOfBirth')}" class="error-message"
+                                    th:errors="*{dateOfBirth}"></div>
                             </div>
                         </div>
                         <div class="row mb-3">
                             <label class="col-sm-2 col-form-label">Địa chỉ</label>
                             <div class="col-sm-10">
                                 <input type="text" class="form-control" th:field="*{address}">
-                                <div th:if="${#fields.hasErrors('address')}" class="error-message" th:errors="*{address}"></div>
+                                <div th:if="${#fields.hasErrors('address')}" class="error-message"
+                                    th:errors="*{address}"></div>
                             </div>
                         </div>
                         <div class="row mb-3">
                             <label class="col-sm-2 col-form-label">Vai trò</label>
                             <div class="col-sm-10">
                                 <select class="form-select" name="roleName" required>
-                                    <option value="Customer" th:selected="${user.role != null && user.role.roleName == 'Customer'}">Customer</option>
-                                    <option value="Coach" th:selected="${user.role != null && user.role.roleName == 'Coach'}">Coach</option>
-                                    <option value="Admin" th:selected="${user.role != null && user.role.roleName == 'Admin'}">Admin</option>
+                                    <option value="Customer"
+                                        th:selected="${user.role != null && user.role.roleName == 'Customer'}">Customer
+                                    </option>
+                                    <option value="Coach"
+                                        th:selected="${user.role != null && user.role.roleName == 'Coach'}">Coach
+                                    </option>
+                                    <option value="Admin"
+                                        th:selected="${user.role != null && user.role.roleName == 'Admin'}">Admin
+                                    </option>
                                 </select>
                             </div>
                         </div>
@@ -303,4 +389,5 @@
     <script th:src="@{/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js}"></script>
     <script th:src="@{/js/main.js}"></script>
 </body>
+
 </html>

@@ -15,7 +15,7 @@ public class CoachController {
     private final UserService userService;
 
     @GetMapping("/coaches")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('Admin')")
     public String listCoaches(Model model) {
         model.addAttribute("coaches", userService.getAllCoaches());
         return "admin/coach-list";
