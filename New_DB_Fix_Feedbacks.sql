@@ -1,8 +1,8 @@
-
-
 -- Bước 2: Tạo database với mã hóa hỗ trợ tiếng Việt
 CREATE DATABASE IF NOT EXISTS KingPoolDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE KingPoolDB;
+
+-- drop database kingpooldb;
 
 -- Bước 3: Tạo các bảng với tối ưu hóa
 
@@ -176,9 +176,9 @@ CREATE TABLE SwimClassRegistrations (
 
 -- Insert into Roles
 INSERT INTO Roles (role_name) VALUES 
-('Customer'),
-('Coach'),
-('Admin');
+('CUSTOMER'),
+('COACH'),
+('ADMIN');
 
 -- Insert into Users
 INSERT INTO Users (name, username, password, email, phone_number, gender, date_of_birth, hire_date, role_id, address, image, status) VALUES 
@@ -246,8 +246,12 @@ INSERT INTO SwimClassRegistrations (class_id, user_id, status) VALUES
 (2, 2, 'Pending'),
 (3, 1, 'Confirmed');
 
-
 ALTER TABLE Feedback ADD COLUMN is_visible BOOLEAN DEFAULT TRUE;
 
 UPDATE Feedback SET is_visible = TRUE WHERE feedback_id IN (1, 3);
 UPDATE Feedback SET is_visible = FALSE WHERE feedback_id = 2;
+
+
+UPDATE users SET role_id = (SELECT role_id FROM roles WHERE role_name = 'ADMIN') WHERE user_id = 3;
+
+SELECT * FROM roles;

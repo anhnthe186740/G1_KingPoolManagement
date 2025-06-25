@@ -100,6 +100,8 @@ public class AuthService {
 
     public void updateUserProfile(User currentUser, User updatedUser, MultipartFile imageFile) throws IOException {
         logger.info("Updating profile for user: {}", currentUser.getUsername());
+        logger.info("Image file received: name={}, size={}", 
+                imageFile.getOriginalFilename(), imageFile.getSize());
 
         currentUser.setName(updatedUser.getName());
         currentUser.setEmail(updatedUser.getEmail());
@@ -111,25 +113,16 @@ public class AuthService {
         if (!imageFile.isEmpty()) {
             String uploadDir = System.getProperty("user.dir") + "/uploads/";
             Path uploadPath = Paths.get(uploadDir);
-            logger.info("Checking upload directory: {}", uploadPath.toString());
-            try {
-                if (!Files.exists(uploadPath)) {
-                    logger.info("Upload directory does not exist, creating: {}", uploadPath.toString());
-                    Files.createDirectories(uploadPath);
-                    logger.info("Upload directory created successfully: {}", uploadPath.toString());
-                }
-                String fileName = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
-                Path filePath = uploadPath.resolve(fileName);
-                logger.info("Attempting to save image file: {}", fileName);
-                Files.write(filePath, imageFile.getBytes());
-                logger.info("Image file saved successfully at: {}", filePath.toString());
-                currentUser.setImage(fileName);
-            } catch (IOException e) {
-                logger.error("Failed to save image file: {}", e.getMessage(), e);
-                throw new IOException("Không thể lưu ảnh: " + e.getMessage(), e);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
             }
+            String fileName = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
+            Path filePath = uploadPath.resolve(fileName);
+            Files.write(filePath, imageFile.getBytes());
+            currentUser.setImage(fileName);
+            logger.info("Image saved: {}", fileName);
         } else {
-            logger.info("No image file provided for upload.");
+            logger.info("No image file provided, keeping existing: {}", currentUser.getImage());
         }
 
         userRepository.save(currentUser);

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="utf-8">
     <title>KingPool - Dashboard</title>
@@ -14,15 +13,13 @@
     <link th:href="@{/lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css}" rel="stylesheet" />
     <link th:href="@{/css/bootstrap.min.css}" rel="stylesheet">
     <link th:href="@{/css/style.css}" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css"
-        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
     <style>
         :root {
             --primary: #009CFF;
             --light: #F3F6F9;
             --dark: #191C24;
         }
-
         .back-to-top {
             position: fixed;
             display: none;
@@ -30,30 +27,25 @@
             bottom: 45px;
             z-index: 99;
         }
-
         #spinner {
             opacity: 0;
             visibility: hidden;
             transition: opacity .5s ease-out, visibility 0s linear .5s;
             z-index: 99999;
         }
-
         #spinner.show {
             transition: opacity .5s ease-out, visibility 0s linear 0s;
             visibility: visible;
             opacity: 1;
         }
-
         .btn {
             transition: .5s;
         }
-
         .btn.btn-primary {
             color: #FFFFFF;
             background-color: var(--primary);
             border-color: var(--primary);
         }
-
         .sidebar {
             position: fixed;
             top: 0;
@@ -66,48 +58,23 @@
             transition: 0.5s;
             z-index: 999;
         }
-
         .content {
             margin-left: 250px;
             min-height: 100vh;
             background: #FFFFFF;
             transition: 0.5s;
         }
-
         @media (min-width: 992px) {
-            .sidebar {
-                margin-left: 0;
-            }
-
-            .sidebar.open {
-                margin-left: -250px;
-            }
-
-            .content {
-                width: calc(100% - 250px);
-            }
-
-            .content.open {
-                width: 100%;
-                margin-left: 0;
-            }
+            .sidebar { margin-left: 0; }
+            .sidebar.open { margin-left: -250px; }
+            .content { width: calc(100% - 250px); }
+            .content.open { width: 100%; margin-left: 0; }
         }
-
         @media (max-width: 991.98px) {
-            .sidebar {
-                margin-left: -250px;
-            }
-
-            .sidebar.open {
-                margin-left: 0;
-            }
-
-            .content {
-                width: 100%;
-                margin-left: 0;
-            }
+            .sidebar { margin-left: -250px; }
+            .sidebar.open { margin-left: 0; }
+            .content { width: 100%; margin-left: 0; }
         }
-
         .sidebar .navbar .navbar-nav .nav-link {
             padding: 7px 20px;
             color: var(--dark);
@@ -116,14 +83,12 @@
             border-radius: 0 30px 30px 0;
             outline: none;
         }
-
         .sidebar .navbar .navbar-nav .nav-link:hover,
         .sidebar .navbar .navbar-nav .nav-link.active {
             color: var(--primary);
             background: #FFFFFF;
             border-color: var(--primary);
         }
-
         .sidebar .navbar .navbar-nav .nav-link i {
             width: 40px;
             height: 40px;
@@ -133,19 +98,16 @@
             background: #FFFFFF;
             border-radius: 40px;
         }
-
         .content .navbar .navbar-nav .nav-link {
             margin-left: 25px;
             padding: 12px 0;
             color: var(--dark);
             outline: none;
         }
-
         .content .navbar .navbar-nav .nav-link:hover,
         .content .navbar .navbar-nav .nav-link.active {
             color: var(--primary);
         }
-
         .content .navbar .sidebar-toggler,
         .content .navbar .navbar-nav .nav-link i {
             width: 40px;
@@ -156,42 +118,17 @@
             background: #FFFFFF;
             border-radius: 40px;
         }
-
-        .text-primary {
-            color: var(--primary) !important;
-        }
-
-        .bg-light {
-            background-color: var(--light) !important;
-        }
-
-        .text-dark {
-            color: var(--dark) !important;
-        }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            height: 400px;
-            margin: 0 auto;
-        }
-
-        #dashboard-chart {
-            width: 100% !important;
-            height: 100% !important;
-        }
+        .text-primary { color: var(--primary) !important; }
+        .bg-light { background-color: var(--light) !important; }
+        .text-dark { color: var(--dark) !important; }
+        .chart-container { position: relative; width: 100%; height: 400px; margin: 0 auto; }
+        #dashboard-chart { width: 100% !important; height: 100% !important; }
     </style>
 </head>
-
 <body>
     <div class="container-fluid position-relative bg-white d-flex p-0"
         th:with="totalUsers=${totalUsers ?: 0}, totalBookings=${totalBookings ?: 0}, totalCoaches=${totalCoaches ?: 0}, totalFeedbacks=${totalFeedbacks ?: 0}, dailyUsers=${dailyStats?.get('usersToday') ?: 0}, dailyBookings=${dailyStats?.get('bookingsToday') ?: 0}, dailyCoaches=${dailyStats?.get('coachesToday') ?: 0}, dailyFeedbacks=${dailyStats?.get('feedbacksToday') ?: 0}, dailyRevenue=${revenueStats?.get('dailyRevenue') ?: 0}, monthlyRevenue=${revenueStats?.get('monthlyRevenue') ?: 0}, quarterlyRevenue=${revenueStats?.get('quarterlyRevenue') ?: 0}, yearlyRevenue=${revenueStats?.get('yearlyRevenue') ?: 0}">
-        <div id="spinner"
-            class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
-            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-        </div>
+        
         <div class="sidebar pe-4 pb-3">
             <nav class="navbar bg-light navbar-light">
                 <a href="/dashboard" class="navbar-brand mx-4 mb-3">
@@ -199,31 +136,22 @@
                 </a>
                 <div class="d-flex align-items-center ms-4 mb-4">
                     <div class="position-relative">
-                        <img class="rounded-circle"
-                            th:src="@{${session.user != null && session.user.image != null} ? ('/Uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}"
-                            alt="" style="width: 40px; height: 40px;">
-                        <div
-                            class="bg-success rounded-circle border border-2 border-white position-absolute end-0 bottom-0 p-1">
-                        </div>
+                        <img class="rounded-circle" 
+                             th:src="@{${session.user != null && session.user.image != null} ? ('/uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}" 
+                             alt="Ảnh đại diện" style="width: 40px; height: 40px;">
+                        <div class="bg-success rounded-circle border border-2 border-white position-absolute end-0 bottom-0 p-1"></div>
                     </div>
                     <div class="ms-3">
-                        <h6 class="mb-0" th:text="${session.user != null ? session.user.name : ''}"></h6>
-                        <span
-                            th:text="${session.user != null && session.user.role != null ? session.user.role.roleName : ''}"></span>
+                        <h6 class="mb-0" th:text="${session.user != null ? session.user.name : 'Admin'}"></h6>
+                        <span th:text="${session.user != null && session.user.role != null ? session.user.role.roleName : 'Admin'}"></span>
                     </div>
                 </div>
                 <div class="navbar-nav w-100">
-                    <a href="/dashboard" class="nav-item nav-link active"><i
-                            class="fa fa-tachometer-alt me-2"></i>Dashboard</a>
-                    <a href="/admin/users" class="nav-item nav-link"><i class="fa fa-users me-2"></i>Quản lý người
-                        dùng</a>
-                    <a href="/admin/coaches" class="nav-item nav-link"><i class="fa fa-user-tie me-2"></i>Quản lý huấn
-                        luyện viên</a>
-                    <a href="/admin/swim-classes" class="nav-item nav-link"><i class="fa fa-swimming-pool me-2"></i>Quản
-                        lý lớp học bơi</a>
-                    <a href="/admin/feedbacks" class="nav-item nav-link"><i class="fa fa-comments me-2"></i>Quản lý phản
-                        hồi</a>
-                    <a href="/profile" class="nav-item nav-link"><i class="fa fa-user me-2"></i>Hồ sơ</a>
+                    <a href="/dashboard" class="nav-item nav-link active"><i class="fa fa-tachometer-alt me-2"></i>Dashboard</a>
+                    <a href="/admin/users" class="nav-item nav-link"><i class="fa fa-users me-2"></i>Quản lý người dùng</a>
+                    <a href="/admin/coaches" class="nav-item nav-link"><i class="fa fa-user-tie me-2"></i>Quản lý huấn luyện viên</a>
+                    <a href="/admin/swim-classes" class="nav-item nav-link"><i class="fa fa-swimming-pool me-2"></i>Quản lý lớp học bơi</a>
+                    <a href="/admin/feedbacks" class="nav-item nav-link"><i class="fa fa-comments me-2"></i>Quản lý phản hồi</a>
                     <a href="/logout" class="nav-item nav-link"><i class="fa fa-sign-out-alt me-2"></i>Đăng xuất</a>
                 </div>
             </nav>
@@ -256,11 +184,11 @@
                     </div>
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                            <img class="rounded-circle me-lg-2"
-                                th:src="@{${session.user != null && session.user.image != null} ? ('/Uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}"
-                                alt="" style="width: 40px; height: 40px;">
-                            <span class="d-none d-lg-inline-flex"
-                                th:text="${session.user != null ? session.user.name : ''}"></span>
+                            <img class="rounded-circle me-lg-2" 
+                                 th:src="@{${session.user != null && session.user.image != null} ? ('/uploads/' + ${session.user.image}) : '/assets/img/default-profile.jpg'}" 
+                                 alt="Ảnh đại diện" style="width: 40px; height: 40px;">
+                            <span class="d-none d-lg-inline-flex" 
+                                  th:text="${session.user != null ? session.user.name : 'Admin'}"></span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end bg-light border-0 rounded-0 rounded-bottom m-0">
                             <a href="/profile" class="dropdown-item">Hồ sơ</a>
@@ -373,10 +301,8 @@
     <script th:src="@{/lib/tempusdominus/js/moment.min.js}"></script>
     <script th:src="@{/lib/tempusdominus/js/moment-timezone.min.js}"></script>
     <script th:src="@{/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js}"></script>
-    <script th:src="@{/js/main.js}"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
     <script th:inline="javascript">
         /*<![CDATA[*/
         try {
@@ -388,16 +314,12 @@
             var totalBookings = Number(/*[[${totalBookings}]]*/ 0) || 0;
             var totalCoaches = Number(/*[[${totalCoaches}]]*/ 0) || 0;
             var totalFeedbacks = Number(/*[[${totalFeedbacks}]]*/ 0) || 0;
-
             var totalSwimClasses = Number(/*[[${totalSwimClasses}]]*/ 0) || 0;
             var dailySwimClasses = Number(/*[[${dailySwimClasses}]]*/ 0) || 0;
-
-
             var dailyUsers = Number(/*[[${dailyUsers}]]*/ 0) || 0;
             var dailyBookings = Number(/*[[${dailyBookings}]]*/ 0) || 0;
             var dailyCoaches = Number(/*[[${dailyCoaches}]]*/ 0) || 0;
             var dailyFeedbacks = Number(/*[[${dailyFeedbacks}]]*/ 0) || 0;
-
             var dailyRevenue = Number(/*[[${dailyRevenue}]]*/ 0) || 0;
             var monthlyRevenue = Number(/*[[${monthlyRevenue}]]*/ 0) || 0;
             var quarterlyRevenue = Number(/*[[${quarterlyRevenue}]]*/ 0) || 0;
@@ -553,5 +475,4 @@
         /*]]>*/
     </script>
 </body>
-
 </html>
