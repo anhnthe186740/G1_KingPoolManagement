@@ -36,10 +36,6 @@ if (auth != null) {
         return "homepage/homepage";
     }
 
-    @GetMapping("/user-homepage")
-    public String getUserHomePage() {
-        return "homepage/user-homepage";
-    }
 
     @GetMapping("/login")
     public String getLogin(Model model) {

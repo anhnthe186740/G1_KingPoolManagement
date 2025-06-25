@@ -49,6 +49,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/forgot/resend").permitAll()
                 .requestMatchers("/dashboard", "/admin/**").hasRole("ADMIN")
                 .requestMatchers("/user-homepage", "/api/auth/profile", "/user/swim-classes/**").hasRole("USER")
+                .requestMatchers("/coach/**").hasRole("COACH")
                 .anyRequest().authenticated())
             .formLogin(form -> form
                 .loginPage("/login")
@@ -63,12 +64,9 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/login?logout")
                 .invalidateHttpSession(true)
                 .permitAll());
-           
 
         return http.build();
     }
-
-   
 
     @Bean
     public PasswordEncoder passwordEncoder() {

@@ -93,6 +93,11 @@ public class SwimClassService {
                 .orElseThrow(() -> new IllegalArgumentException("Lớp học không tồn tại"));
     }
 
+    public ClassSchedule getClassScheduleById(Integer id) {
+        return classScheduleRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Lịch học không tồn tại"));
+    }
+
     @Transactional
     public SwimClass createSwimClassWithSchedules(
             String name,
@@ -196,5 +201,9 @@ public class SwimClassService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy lớp học"));
         swimClass.setStatus(newStatus);
         swimClassRepository.save(swimClass);
+    }
+
+    public List<SwimClass> getClassesByCoachId(Integer coachId) {
+        return swimClassRepository.findByCoachUserId(coachId);
     }
 }

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Lịch dạy của huấn luyện viên</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .table-responsive {
+            margin-top: 20px;
+        }
+
+        .alert {
+            margin-bottom: 20px;
+        }
+
+        .btn-sm {
+            transition: all 0.2s;
+        }
+
+        .btn-sm:hover {
+            transform: translateY(-1px);
+        }
+
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+
+        .timetable-slot {
+            min-height: 120px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .timetable-slot.completed {
+            background-color: #d4edda;
+        }
+
+        .timetable-slot.upcoming {
+            background-color: #fff3cd;
+        }
+
+        .timetable-slot.missed {
+            background-color: #f8d7da;
+        }
+
+        .student-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.8rem;
+            }
+            .timetable-slot {
+                min-height: 100px;
+                padding: 5px;
+            }
+            .student-list {
+                max-height: 150px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Quản lý lớp học bơi (Coach)</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/coach">Danh sách lớp</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/coach/schedules">Lịch dạy</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Đăng xuất</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h1 class="mb-4">Lịch dạy của bạn</h1>
+
+        <!-- Thông báo -->
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <div th:if="${scheduleMap != null and scheduleMap.isEmpty()}" class="alert alert-info">
+            Không có lịch dạy trong tuần này.
+        </div>
+
+        <!-- Chọn khoảng thời gian -->
+        <form method="get" class="mb-3">
+            <label for="weekSelect" class="form-label">Chọn khoảng thời gian</label>
+            <select class="form-select" id="weekSelect" name="week" onchange="this.form.submit()">
+                <option th:each="week : ${weeks}" 
+                        th:value="${week.value}" 
+                        th:text="${week.label}"
+                        th:selected="${week.value.toString() == selectedWeek}">
+                </option>
+            </select>
+        </form>
+
+        <!-- Thời khóa biểu -->
+        <div class="table-responsive" th:unless="${scheduleMap == null or scheduleMap.isEmpty()}">
+            <table class="table table-bordered text-center align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Giờ \ Ngày</th>
+                        <th th:each="day : ${daysOfWeek}" th:text="${day}"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="slot : ${timeSlots}">
+                        <td><strong th:text="${slot.label}"></strong></td>
+                        <td th:each="day : ${daysOfWeek}">
+                            <div th:if="${scheduleMap[day + '_' + slot.value]} != null"
+                                 th:each="lesson, lessonStat : ${scheduleMap[day + '_' + slot.value]}"
+                                 th:class="'timetable-slot ' + ${lesson.statusClass}">
+                                <div><strong th:text="${lesson.className}"></strong></div>
+                                <div th:text="'HLV: ' + ${lesson.coach}"></div>
+                                <div th:text="'Giờ: ' + ${lesson.time}"></div>
+                                <div th:text="'Trạng thái: ' + ${lesson.status}"></div>
+                                <div th:if="${lesson.canMarkAttendance == 'true'}">
+                                    <form th:action="@{/coach/markAttendance}" method="post">
+                                        <input type="hidden" name="scheduleId" th:value="${#strings.substringAfter(lesson.status, 'for schedule: ')}" />
+                                        <select name="status" class="form-select form-select-sm mt-2">
+                                            <option value="CHƯA_HỌC" th:selected="${lesson.status == 'Chưa học'}">Chưa học</option>
+                                            <option value="ĐÃ_HỌC" th:selected="${lesson.status == 'Đã học'}">Đã học</option>
+                                            <option value="VẮNG" th:selected="${lesson.status == 'Vắng'}">Vắng</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary btn-sm mt-2">Lưu điểm danh</button>
+                                    </form>
+                                </div>
+                                <div th:unless="${lesson.canMarkAttendance == 'true'}" class="text-muted mt-2">
+                                    Đã hết thời gian điểm danh
+                                </div>
+                                <div class="student-list mt-2">
+                                    <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" 
+                                            th:data-bs-target="'#studentModal_' + ${lessonStat.index}">
+                                        Xem danh sách học viên
+                                    </button>
+                                    <div th:each="studentData, stat : ${#strings.arraySplit(lesson.students ?: '', ',')}"
+                                         th:unless="${studentData == ''}"
+                                         class="modal fade" th:id="'studentModal_' + ${stat.index}"
+                                         tabindex="-1" aria-labelledby="studentModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" th:text="'Danh sách học viên - ' + ${lesson.className} + ' (' + ${day} + ', ' + ${lesson.time} + ')'"></h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <table class="table table-striped" th:if="${#lists.size(#strings.arraySplit(lesson.students ?: '', ',')) > 0}">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>STT</th>
+                                                                <th>Tên</th>
+                                                                <th>Ngày sinh</th>
+                                                                <th>Gmail</th>
+                                                                <th>SĐT</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr th:with="fields=${#strings.arraySplit(studentData, ',')}"
+                                                                th:if="${fields != null and #lists.size(fields) >= 5}">
+                                                                <td th:text="${#strings.arraySplit(fields[0], '=')[1]}"></td>
+                                                                <td th:text="${#strings.arraySplit(fields[1], '=')[1]}"></td>
+                                                                <td th:text="${#strings.arraySplit(fields[2], '=')[1]}"></td>
+                                                                <td th:text="${#strings.arraySplit(fields[3], '=')[1]}"></td>
+                                                                <td th:text="${#strings.arraySplit(fields[4], '=')[1]}"></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <div th:unless="${#lists.size(#strings.arraySplit(lesson.students ?: '', ',')) > 0}" class="alert alert-info">
+                                                        Không có học viên nào trong lớp này.
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div th:if="${scheduleMap[day + '_' + slot.value]} == null"
+                                 class="timetable-slot">—</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <a href="/coach" class="btn btn-secondary mt-4"><i class="bi bi-arrow-left me-1"></i>Quay lại</a>
+    </div>
+
+    <!-- Toast container -->
+    <div class="toast-container">
+        <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert"
+             aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" th:text="${error}"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                        aria-label="Close"></button>
+            </div>
+        </div>
+        <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert"
+             aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" th:text="${success}"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                        aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const error = /*[[${error}]]*/ null;
+            const success = /*[[${success}]]*/ null;
+            if (error) {
+                let toast = new bootstrap.Toast(document.getElementById('errorToast'));
+                toast.show();
+            }
+            if (success) {
+                let toast = new bootstrap.Toast(document.getElementById('successToast'));
+                toast.show();
+            }
+        });
+    </script>
+</body>
+</html>

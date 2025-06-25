@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SwimClassRegistrationService {
@@ -149,6 +150,14 @@ public class SwimClassRegistrationService {
 
     public List<SwimClassRegistration> getConfirmedRegistrationsByClassId(Integer classId) {
         return registrationRepository.findBySwimClass_ClassIdAndStatus(classId, "CONFIRMED");
+    }
+
+    public List<User> getRegisteredStudents(Integer classId) {
+        List<SwimClassRegistration> registrations = registrationRepository.findBySwimClassClassId(classId);
+        return registrations.stream()
+            .filter(r -> "CONFIRMED".equalsIgnoreCase(r.getStatus()))
+            .map(SwimClassRegistration::getUser)
+            .collect(Collectors.toList());
     }
 
     private void checkScheduleConflict(Integer userId, List<ClassSchedule> newSchedules, Integer currentRegistrationId) {
