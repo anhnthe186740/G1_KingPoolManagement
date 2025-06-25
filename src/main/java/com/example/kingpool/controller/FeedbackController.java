@@ -20,7 +20,7 @@ public class FeedbackController {
     private FeedbackService feedbackService;
 
     @GetMapping("/feedbacks")
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     public String viewFeedbacks(@RequestParam(defaultValue = "0") int page, Model model) {
         Pageable pageable = PageRequest.of(page, 5);
         Page<Feedback> feedbackPage = feedbackService.findAll(pageable);

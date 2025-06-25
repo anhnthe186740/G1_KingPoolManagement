@@ -11,6 +11,7 @@ import com.example.kingpool.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -29,10 +30,11 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Controller
-@RequestMapping("/user/swim-classes")
-public class UserSwimClassController {
+@RequestMapping("/coach")
+@PreAuthorize("hasRole('COACH')")
+public class CoachSwimClassController {
 
-    private static final Logger log = LoggerFactory.getLogger(UserSwimClassController.class);
+    private static final Logger log = LoggerFactory.getLogger(CoachSwimClassController.class);
 
     @Autowired
     private SwimClassService swimClassService;
@@ -49,99 +51,53 @@ public class UserSwimClassController {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @GetMapping
-    public String listOpenClasses(Model model) {
-        try {
-            List<SwimClass> openClasses = swimClassService.getSwimClassesByStatus("MỞ");
-            log.info("Số lượng lớp học đang mở: {}", openClasses.size());
-            if (openClasses.isEmpty()) {
-                model.addAttribute("error", "Không có lớp học nào đang mở.");
-            }
-            model.addAttribute("openClasses", openClasses);
-            return "user/classes";
-        } catch (Exception e) {
-            log.error("Lỗi khi tải danh sách lớp học: {}", e.getMessage(), e);
-            model.addAttribute("error", "Lỗi khi tải danh sách lớp học: " + e.getMessage());
-            return "user/classes";
-        }
-    }
-
-    @PostMapping("/register/{classId}")
-    public String registerClass(@PathVariable Integer classId, RedirectAttributes redirectAttributes) {
+    public String coachClasses(Model model) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String username = auth.getName();
-            registrationService.registerClass(classId, username);
-            redirectAttributes.addFlashAttribute("success", "Đăng ký lớp học thành công, chờ xác nhận.");
-            return "redirect:/user/swim-classes";
+            User coach = userService.getUserByUsername(username);
+            List<SwimClass> coachClasses = swimClassService.getClassesByCoachId(coach.getUserId());
+            model.addAttribute("coachClasses", coachClasses);
+            return "coach/classes";
         } catch (Exception e) {
-            log.error("Lỗi khi đăng ký lớp học {}: {}", classId, e.getMessage(), e);
-            redirectAttributes.addFlashAttribute("error", "Lỗi khi đăng ký: " + e.getMessage());
-            return "redirect:/user/swim-classes";
+            log.error("Lỗi khi tải danh sách lớp của coach: {}", e.getMessage(), e);
+            model.addAttribute("error", "Lỗi khi tải danh sách lớp: " + e.getMessage());
+            return "coach/classes";
         }
     }
 
     @GetMapping("/schedules")
     @Transactional(readOnly = true)
-    public String viewSchedules(@RequestParam(value = "week", required = false) String selectedWeek,
+    public String viewCoachSchedules(@RequestParam(value = "week", required = false) String selectedWeek,
             Model model) {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String username = auth.getName();
-            User user = null;
-            try {
-                user = userService.getUserByUsername(username);
-            } catch (Exception e) {
-                log.error("Không tìm thấy user với username {}: {}", username, e.getMessage());
-                model.addAttribute("error", "Không tìm thấy thông tin người dùng.");
-                return setupDefaultModel(model, LocalDate.now(), "0");
-            }
+            User coach = userService.getUserByUsername(username);
 
-            // Validate weekOffset
-            int weekOffset;
+            int weekOffset = 0;
             try {
                 weekOffset = selectedWeek != null ? Integer.parseInt(selectedWeek) : 0;
-                int maxWeeks = calculateMaxWeeks(swimClassService.getUserClasses(username));
+                List<SwimClass> coachClasses = swimClassService.getClassesByCoachId(coach.getUserId());
+                int maxWeeks = calculateMaxWeeks(coachClasses);
                 int minOffset = -2;
                 int maxOffset = maxWeeks + 2;
                 if (weekOffset < minOffset || weekOffset > maxOffset)
                     weekOffset = 0;
             } catch (NumberFormatException e) {
+                log.warn("Invalid weekOffset, defaulting to 0: {}", e.getMessage());
                 weekOffset = 0;
             }
 
-            // Lấy mốc tuần từ hiện tại
+            List<SwimClass> coachClasses = swimClassService.getClassesByCoachId(coach.getUserId());
+            List<ClassSchedule> allSchedules = coachClasses.stream()
+                    .flatMap(c -> c.getSchedules().stream())
+                    .collect(Collectors.toList());
+
             LocalDate baseMonday = LocalDate.now().with(DayOfWeek.MONDAY);
             LocalDate startOfWeek = baseMonday.plusWeeks(weekOffset);
             LocalDate endOfWeek = startOfWeek.plusDays(6);
-            LocalDateTime startDateTime = startOfWeek.atStartOfDay();
-            LocalDateTime endDateTime = endOfWeek.atTime(23, 59, 59);
-
-            List<SwimClass> userClasses = swimClassService.getUserClasses(username);
-            List<ClassSchedule> schedulesInWeek = userClasses.stream()
-                    .flatMap(c -> c.getSchedules().stream())
-                    .filter(s -> {
-                        LocalDate d = s.getStartTime().toLocalDate();
-                        return !d.isBefore(startOfWeek) && !d.isAfter(endOfWeek);
-                    })
-                    .collect(Collectors.toList());
-
-            List<Attendance> attendances = new ArrayList<>();
-            try {
-                attendances = attendanceRepository.findByUserIdAndDateRange(user.getUserId(), startDateTime,
-                        endDateTime);
-            } catch (Exception e) {
-                log.warn("Lỗi khi lấy điểm danh: {}", e.getMessage());
-            }
-
-            // ✅ Lấy danh sách giờ từ startTime chính xác
-            List<String> hourList = schedulesInWeek.stream()
-                    .map(s -> s.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")))
-                    .distinct()
-                    .sorted()
-                    .toList();
-            List<Map<String, String>> timeSlots = hourList.stream()
-                    .map(h -> Map.of("label", h, "value", h))
-                    .toList();
+            LocalDateTime now = LocalDateTime.now();
 
             List<String> daysOfWeek = IntStream.range(0, 7)
                     .mapToObj(i -> {
@@ -149,6 +105,28 @@ public class UserSwimClassController {
                         return date.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL,
                                 Locale.forLanguageTag("vi-VN")) + " - " + date.format(DATE_FORMATTER);
                     })
+                    .collect(Collectors.toList());
+
+            List<ClassSchedule> schedulesInWeek = coachClasses.stream()
+                    .flatMap(c -> c.getSchedules().stream())
+                    .filter(s -> {
+                        LocalDate d = s.getStartTime().toLocalDate();
+                        return !d.isBefore(startOfWeek) && !d.isAfter(endOfWeek);
+                    })
+                    .collect(Collectors.toList());
+
+            List<Attendance> attendances = attendanceRepository.findByClassScheduleIdsAndUserId(
+                    schedulesInWeek.stream().map(ClassSchedule::getClassScheduleId).collect(Collectors.toList()),
+                    coach.getUserId());
+
+            // ✅ Sửa: dùng HH:mm thay vì chỉ HH:00 để đồng bộ với key
+            List<String> hourList = schedulesInWeek.stream()
+                    .map(s -> s.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")))
+                    .distinct()
+                    .sorted()
+                    .toList();
+            List<Map<String, String>> timeSlots = hourList.stream()
+                    .map(h -> Map.of("label", h, "value", h))
                     .collect(Collectors.toList());
 
             Map<String, List<Map<String, String>>> scheduleMap = new HashMap<>();
@@ -159,12 +137,26 @@ public class UserSwimClassController {
                 String hourEnd = s.getEndTime().format(DateTimeFormatter.ofPattern("HH:mm"));
                 String key = day + "_" + hourStart;
 
+                List<User> students = registrationService.getRegisteredStudents(s.getSwimClass().getClassId());
+                String studentsData = students.isEmpty() ? ""
+                        : students.stream()
+                                .map(student -> String.format("stt=%d,name=%s,dob=%s,email=%s,phone=%s",
+                                        students.indexOf(student) + 1,
+                                        student.getName(),
+                                        student.getDateOfBirth() != null
+                                                ? student.getDateOfBirth().format(DATE_FORMATTER)
+                                                : "",
+                                        student.getEmail(),
+                                        student.getPhoneNumber()))
+                                .collect(Collectors.joining(","));
+
                 Attendance attendance = attendances.stream()
                         .filter(a -> a.getClassSchedule().getClassScheduleId().equals(s.getClassScheduleId()))
                         .findFirst()
-                        .orElse(new Attendance(null, user, s, "CHƯA_HỌC", null, null));
+                        .orElse(new Attendance(null, null, s, "CHƯA_HỌC", null, null));
 
                 String status = attendance.getStatus();
+                boolean canMarkAttendance = isWithinAttendancePeriod(s.getStartTime(), now);
                 String statusClass = switch (status) {
                     case "ĐÃ_HỌC" -> "completed";
                     case "VẮNG" -> "missed";
@@ -174,8 +166,7 @@ public class UserSwimClassController {
 
                 Map<String, String> sessionData = new HashMap<>();
                 sessionData.put("className", s.getSwimClass().getName());
-                sessionData.put("coach",
-                        s.getSwimClass().getCoach() != null ? s.getSwimClass().getCoach().getName() : "Chưa có HLV");
+                sessionData.put("coach", s.getSwimClass().getCoach().getName());
                 sessionData.put("time", hourStart + " - " + hourEnd);
                 sessionData.put("status", switch (status) {
                     case "ĐÃ_HỌC" -> "Đã học";
@@ -183,42 +174,30 @@ public class UserSwimClassController {
                     default -> "Chưa học";
                 });
                 sessionData.put("statusClass", statusClass);
+                sessionData.put("canMarkAttendance", String.valueOf(canMarkAttendance));
+                sessionData.put("students", studentsData);
 
                 scheduleMap.computeIfAbsent(key, k -> new ArrayList<>()).add(sessionData);
             }
 
-            List<Map<String, String>> weeks = generateWeeks(LocalDate.now(), userClasses);
+            List<Map<String, String>> weeks = generateWeeks(LocalDate.now(), coachClasses);
 
             model.addAttribute("timeSlots", timeSlots);
             model.addAttribute("daysOfWeek", daysOfWeek);
             model.addAttribute("scheduleMap", scheduleMap);
             model.addAttribute("weeks", weeks);
             model.addAttribute("selectedWeek", String.valueOf(weekOffset));
-            return "user/schedules";
+            return "coach/schedules";
 
         } catch (Exception e) {
-            log.error("Lỗi khi tải lịch học: {}", e.getMessage(), e);
-            model.addAttribute("error", "Lỗi khi tải lịch học: " + e.getMessage());
+            log.error("Lỗi khi tải lịch dạy: {}", e.getMessage(), e);
+            model.addAttribute("error", "Lỗi khi tải lịch dạy: " + e.getMessage());
             return setupDefaultModel(model, LocalDate.now(), "0");
         }
     }
 
-    private String setupDefaultModel(Model model, LocalDate today, String selectedWeek) {
-        model.addAttribute("weeks", generateWeeks(today, Collections.emptyList()));
-        model.addAttribute("selectedWeek", selectedWeek);
-        model.addAttribute("timeSlots", new ArrayList<>());
-        model.addAttribute("daysOfWeek", IntStream.range(0, 7)
-                .mapToObj(i -> {
-                    LocalDate date = today.with(DayOfWeek.MONDAY).plusDays(i);
-                    return date.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL,
-                            Locale.forLanguageTag("vi-VN")) + " - " + date.format(DATE_FORMATTER);
-                }).toList());
-        model.addAttribute("scheduleMap", new HashMap<String, List<Map<String, String>>>());
-        return "user/schedules";
-    }
-
-    private List<Map<String, String>> generateWeeks(LocalDate today, List<SwimClass> userClasses) {
-        LocalDate currentMonday = today.with(DayOfWeek.MONDAY);
+    private List<Map<String, String>> generateWeeks(LocalDate baseDate, List<SwimClass> userClasses) {
+        LocalDate currentMonday = baseDate.with(DayOfWeek.MONDAY);
         int maxWeeks = calculateMaxWeeks(userClasses);
         int minOffset = -2;
         int maxOffset = maxWeeks + 2;
@@ -227,7 +206,8 @@ public class UserSwimClassController {
                     LocalDate monday = currentMonday.plusWeeks(i);
                     String label = monday.format(DATE_FORMATTER) + " → " + monday.plusDays(6).format(DATE_FORMATTER);
                     return Map.of("value", String.valueOf(i), "label", label);
-                }).collect(Collectors.toList());
+                })
+                .collect(Collectors.toList());
     }
 
     private int calculateMaxWeeks(List<SwimClass> userClasses) {
@@ -236,9 +216,44 @@ public class UserSwimClassController {
         return userClasses.stream()
                 .mapToInt(swimClass -> {
                     LocalDate startDate = swimClass.getCreatedAt().toLocalDate();
-                    LocalDate endDate = startDate.plusWeeks(5);
+                    LocalDate endDate = startDate.plusWeeks(5); // mặc định 5 tuần
                     return (int) ChronoUnit.WEEKS.between(startDate, endDate);
                 }).max().orElse(0);
     }
 
+    private boolean isWithinAttendancePeriod(LocalDateTime startTime, LocalDateTime now) {
+        LocalDate startDate = startTime.toLocalDate();
+        LocalDate currentDate = now.toLocalDate();
+        return !currentDate.isAfter(startDate) && !currentDate.isBefore(startDate);
+    }
+
+    private String setupDefaultModel(Model model, LocalDate today, String selectedWeek) {
+        int defaultOffset = selectedWeek != null ? Integer.parseInt(selectedWeek) : 0;
+        List<SwimClass> coachClasses = swimClassService.getClassesByCoachId(getCurrentCoach().getUserId());
+        List<ClassSchedule> allSchedules = coachClasses.stream()
+                .flatMap(c -> c.getSchedules().stream())
+                .collect(Collectors.toList());
+        LocalDate minDate = allSchedules.stream()
+                .map(s -> s.getStartTime().toLocalDate())
+                .min(LocalDate::compareTo)
+                .orElse(today);
+        List<Map<String, String>> weeks = generateWeeks(minDate, coachClasses);
+        model.addAttribute("weeks", weeks);
+        model.addAttribute("selectedWeek", selectedWeek);
+        model.addAttribute("timeSlots", new ArrayList<Map<String, String>>());
+        model.addAttribute("daysOfWeek", IntStream.range(0, 7)
+                .mapToObj(i -> {
+                    LocalDate date = minDate.with(DayOfWeek.MONDAY).plusWeeks(defaultOffset).plusDays(i);
+                    return date.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL,
+                            Locale.forLanguageTag("vi-VN")) + " - " + date.format(DATE_FORMATTER);
+                }).collect(Collectors.toList()));
+        model.addAttribute("scheduleMap", new HashMap<String, List<Map<String, String>>>());
+        return "coach/schedules";
+    }
+
+    private User getCurrentCoach() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        return userService.getUserByUsername(username);
+    }
 }

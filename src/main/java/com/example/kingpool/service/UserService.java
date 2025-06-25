@@ -44,7 +44,6 @@ public class UserService {
         }
     }
 
-    
     public List<User> getUsersByDate(LocalDate date) {
         try {
             LocalDateTime startOfDay = date.atStartOfDay();
@@ -132,5 +131,10 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         user.setRole(role);
         return userRepository.save(user);
+    }
+
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng: " + username));
     }
 }
