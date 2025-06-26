@@ -16,8 +16,9 @@ public class Feedback {
     @Column(name = "feedback_id")
     private Long feedbackId;
 
-    @Column(name = "user_id")
-    private Integer userId; // Thêm userId để ánh xạ với cột user_id trong database
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(name = "name")
     private String name;
@@ -43,12 +44,15 @@ public class Feedback {
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 
-    @Column(name = "response") // Thêm thuộc tính response
+    @Column(name = "response")
     private String response;
 
-    @Column(name = "responded_at") // Thêm thuộc tính respondedAt
+    @Column(name = "responded_at")
     private LocalDateTime respondedAt;
 
-    @Column(name = "status") // Thêm thuộc tính status
+    @Column(name = "status")
     private String status;
+
+    @Column(name = "is_read")
+    private Boolean isRead;
 }

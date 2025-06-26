@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -28,5 +29,24 @@ public class FeedbackController {
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", feedbackPage.getTotalPages());
         return "feedback/feedbacks";
+    }
+
+    @GetMapping("/feedbacks/respond")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String showRespondFeedbackForm(@RequestParam("feedbackId") Long feedbackId, Model model) {
+        Feedback feedback = feedbackService.getFeedbackById(feedbackId);
+        if (feedback == null) {
+            return "redirect:/admin/feedbacks";
+        }
+        model.addAttribute("feedback", feedback);
+        return "feedback/respond-feedback";
+    }
+
+    @PostMapping("/feedbacks/respond")
+    @PreAuthorize("hasRole('ADMIN')")
+    public String respondToFeedback(@RequestParam("feedbackId") Long feedbackId, 
+                                    @RequestParam("response") String response) {
+        feedbackService.respondToFeedback(feedbackId, response);
+        return "redirect:/admin/feedbacks";
     }
 }

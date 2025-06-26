@@ -2,7 +2,7 @@
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="utf-8">
-    <title>KingPool - Quản lý phản hồi</title>
+    <title>KingPool - Phản hồi phản hồi</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -120,11 +120,62 @@
         .text-primary { color: var(--primary) !important; }
         .bg-light { background-color: var(--light) !important; }
         .text-dark { color: var(--dark) !important; }
-        .pagination { justify-content: center; margin-top: 20px; }
-        .page-link { color: var(--primary); border-radius: 5px; }
-        .page-item.active .page-link { background-color: var(--primary); border-color: var(--primary); color: white; }
-        .page-item.disabled .page-link { color: #6c757d; }
-        .page-link:hover:not(.disabled) { background-color: #e9ecef; }
+        .feedback-details {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .feedback-details table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .feedback-details table td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .feedback-details table td:first-child {
+            font-weight: 600;
+            width: 30%;
+            color: var(--dark);
+        }
+        .response-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .response-section textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        .response-section .btn-group {
+            margin-top: 10px;
+        }
+        .response-section .btn {
+            padding: 8px 20px;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .response-section .btn:last-child {
+            margin-right: 0;
+        }
+        .alert {
+            display: none;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
     </style>
 </head>
 <body>
@@ -204,69 +255,79 @@
             <div class="container-fluid pt-4 px-4">
                 <div class="bg-light text-center rounded p-4">
                     <div class="d-flex align-items-center justify-content-between mb-4">
-                        <h6 class="mb-0">Quản lý phản hồi</h6>
-                        <a href="/dashboard" class="btn btn-primary btn-sm">Quay lại</a>
+                        <h6 class="mb-0">Phản hồi phản hồi</h6>
+                        <a href="/admin/feedbacks" class="btn btn-primary btn-sm">Quay lại</a>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table text-start align-middle table-bordered table-hover mb-0">
-                            <thead>
-                                <tr class="text-dark">
-                                    <th scope="col">Tên</th>
-                                    <th scope="col">Email</th>
-                                    <th scope="col">Số điện thoại</th>
-                                    <th scope="col">Địa chỉ</th>
-                                    <th scope="col">Nội dung</th>
-                                    <th scope="col">Đánh giá</th>
-                                    <th scope="col">Trạng thái hiển thị</th>
-                                    <th scope="col">Thời gian gửi</th>
-                                    <th scope="col">Phản hồi</th>
-                                    <th scope="col">Thời gian phản hồi</th>
-                                    <th scope="col">Trạng thái</th>
-                                    <th scope="col">Hành động</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="feedback : ${feedbacks}">
+                    <div th:if="${feedback != null}" class="row">
+                        <!-- Feedback Details Section -->
+                        <div class="col-12 feedback-details">
+                            <h6 class="mb-3">Thông tin phản hồi</h6>
+                            <table>
+                                <tr>
+                                    <td>Tên</td>
                                     <td th:text="${feedback.name} ?: 'Không xác định'"></td>
+                                </tr>
+                                <tr>
+                                    <td>Email</td>
                                     <td th:text="${feedback.email} ?: 'Không xác định'"></td>
+                                </tr>
+                                <tr>
+                                    <td>Số điện thoại</td>
                                     <td th:text="${feedback.phoneNumber} ?: 'Không xác định'"></td>
+                                </tr>
+                                <tr>
+                                    <td>Địa chỉ</td>
                                     <td th:text="${feedback.address} ?: 'Không xác định'"></td>
+                                </tr>
+                                <tr>
+                                    <td>Nội dung</td>
                                     <td th:text="${feedback.content}"></td>
+                                </tr>
+                                <tr>
+                                    <td>Đánh giá</td>
                                     <td th:text="${feedback.rating}"></td>
-                                    <td th:text="${feedback.isVisible} != null ? (${feedback.isVisible} ? 'Hiển thị' : 'Ẩn') : 'Không xác định'"></td>
+                                </tr>
+                                <tr>
+                                    <td>Thời gian gửi</td>
                                     <td th:text="${#temporals.format(feedback.submittedAt, 'dd/MM/yyyy HH:mm')}"></td>
-                                    <td th:text="${feedback.response} ?: 'Chưa phản hồi'"></td>
-                                    <td th:text="${feedback.respondedAt} ? ${#temporals.format(feedback.respondedAt, 'dd/MM/yyyy HH:mm')} : 'Chưa phản hồi'"></td>
+                                </tr>
+                                <tr>
+                                    <td>Trạng thái hiển thị</td>
+                                    <td th:text="${feedback.isVisible} != null ? (${feedback.isVisible} ? 'Hiển thị' : 'Ẩn') : 'Không xác định'"></td>
+                                </tr>
+                                <tr>
+                                    <td>Trạng thái</td>
                                     <td th:text="${feedback.status}"></td>
-                                    <td>
-                                        <div th:if="${feedback.response == null}">
-                                            <a th:href="@{/admin/feedbacks/respond(feedbackId=${feedback.feedbackId})}" 
-                                               class="btn btn-primary btn-sm">Phản hồi</a>
-                                        </div>
-                                        <div th:if="${feedback.response != null}">
-                                            <a th:href="@{/admin/feedbacks/respond(feedbackId=${feedback.feedbackId})}" 
-                                               class="btn btn-secondary btn-sm">Chỉnh sửa</a>
-                                        </div>
-                                    </td>
                                 </tr>
-                                <tr th:if="${#lists.isEmpty(feedbacks)}">
-                                    <td colspan="12" class="text-center">Chưa có phản hồi nào.</td>
+                                <tr th:if="${feedback.response != null}">
+                                    <td>Phản hồi hiện tại</td>
+                                    <td th:text="${feedback.response}"></td>
                                 </tr>
-                            </tbody>
-                        </table>
+                                <tr th:if="${feedback.respondedAt != null}">
+                                    <td>Thời gian phản hồi</td>
+                                    <td th:text="${#temporals.format(feedback.respondedAt, 'dd/MM/yyyy HH:mm')}"></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <!-- Response Section -->
+                        <div class="col-12 response-section">
+                            <h6 class="mb-3">Nhập hoặc chỉnh sửa phản hồi</h6>
+                            <form th:action="@{/admin/feedbacks/respond}" method="post" id="response-form">
+                                <input type="hidden" name="feedbackId" th:value="${feedback.feedbackId}">
+                                <textarea name="response" rows="4" placeholder="Nhập phản hồi của bạn..." required th:value="${feedback.response} ?: ''"></textarea>
+                                <div class="btn-group">
+                                    <button type="submit" class="btn btn-primary">Lưu phản hồi</button>
+                                    <a th:href="@{/admin/feedbacks}" class="btn btn-secondary">Hủy</a>
+                                </div>
+                            </form>
+                            <div class="alert alert-success" id="success-alert" role="alert">
+                                Cập nhật thành công!
+                            </div>
+                        </div>
                     </div>
-                    <ul class="pagination" th:if="${totalPages > 1}">
-                        <li class="page-item" th:class="${currentPage == 0} ? 'disabled'">
-                            <a class="page-link" th:href="@{/admin/feedbacks(page=${currentPage - 1})}">« Trước</a>
-                        </li>
-                        <li class="page-item" th:each="p : ${#numbers.sequence(0, totalPages - 1)}"
-                            th:class="${currentPage == p} ? 'active'">
-                            <a class="page-link" th:href="@{/admin/feedbacks(page=${p})}" th:text="${p + 1}"></a>
-                        </li>
-                        <li class="page-item" th:class="${currentPage == totalPages - 1} ? 'disabled'">
-                            <a class="page-link" th:href="@{/admin/feedbacks(page=${currentPage + 1})}">Sau »</a>
-                        </li>
-                    </ul>
+                    <div th:if="${feedback == null}" class="text-center">
+                        <p>Không tìm thấy phản hồi.</p>
+                    </div>
                 </div>
             </div>
             <div class="container-fluid pt-4 px-4">
@@ -293,5 +354,27 @@
     <script th:src="@{/lib/tempusdominus/js/moment-timezone.min.js}"></script>
     <script th:src="@{/lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js}"></script>
     <script th:src="@{/js/main.js}"></script>
+    <script>
+        $(document).ready(function() {
+            $('#response-form').submit(function(e) {
+                e.preventDefault();
+                var form = $(this);
+                $.ajax({
+                    type: 'POST',
+                    url: form.attr('action'),
+                    data: form.serialize(),
+                    success: function() {
+                        $('#success-alert').fadeIn(500).delay(2000).fadeOut(500);
+                        setTimeout(function() {
+                            window.location.href = '/admin/feedbacks';
+                        }, 2500);
+                    },
+                    error: function() {
+                        alert('Có lỗi xảy ra khi cập nhật.');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

@@ -255,3 +255,22 @@ UPDATE Feedback SET is_visible = FALSE WHERE feedback_id = 2;
 UPDATE users SET role_id = (SELECT role_id FROM roles WHERE role_name = 'ADMIN') WHERE user_id = 3;
 
 SELECT * FROM roles;
+
+ALTER TABLE Feedback
+ADD COLUMN is_read BOOLEAN DEFAULT FALSE;
+
+-- Cập nhật trạng thái phản hồi cho các feedback hiện có
+UPDATE Feedback
+SET status = 'Responded'
+WHERE response IS NOT NULL;
+
+-- Cập nhật trạng thái đọc cho một số feedback mẫu
+UPDATE Feedback
+SET is_read = TRUE
+WHERE feedback_id IN (1, 3);
+
+
+ALTER TABLE Feedback
+MODIFY COLUMN status ENUM('Pending', 'Read', 'Responded', 'Completed') DEFAULT 'Pending';
+
+-- use kingpooldb;
