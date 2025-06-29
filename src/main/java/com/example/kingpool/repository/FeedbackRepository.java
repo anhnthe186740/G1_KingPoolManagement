@@ -4,6 +4,8 @@ import com.example.kingpool.entity.Feedback;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -18,4 +20,7 @@ public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
 
     @Query("SELECT f FROM Feedback f JOIN FETCH f.user u WHERE f.feedbackId = :feedbackId")
     Feedback findByFeedbackId(Long feedbackId);
+
+    @Query("SELECT f FROM Feedback f JOIN FETCH f.user u")
+    Page<Feedback> findAll(Pageable pageable);
 }

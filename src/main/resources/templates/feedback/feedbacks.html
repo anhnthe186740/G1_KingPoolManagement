@@ -227,16 +227,16 @@
                             </thead>
                             <tbody>
                                 <tr th:each="feedback : ${feedbacks}">
-                                    <td th:text="${feedback.name} ?: 'Không xác định'"></td>
-                                    <td th:text="${feedback.email} ?: 'Không xác định'"></td>
-                                    <td th:text="${feedback.phoneNumber} ?: 'Không xác định'"></td>
-                                    <td th:text="${feedback.address} ?: 'Không xác định'"></td>
+                                    <td th:text="${feedback.user != null ? feedback.user.name : 'Không xác định'}"></td>
+                                    <td th:text="${feedback.user != null ? feedback.user.email : 'Không xác định'}"></td>
+                                    <td th:text="${feedback.user != null ? feedback.user.phoneNumber : 'Không xác định'}"></td>
+                                    <td th:text="${feedback.user != null ? feedback.user.address : 'Không xác định'}"></td>
                                     <td th:text="${feedback.content}"></td>
                                     <td th:text="${feedback.rating}"></td>
-                                    <td th:text="${feedback.isVisible} != null ? (${feedback.isVisible} ? 'Hiển thị' : 'Ẩn') : 'Không xác định'"></td>
+                                    <td th:text="${feedback.isVisible != null ? (feedback.isVisible ? 'Hiển thị' : 'Ẩn') : 'Không xác định'}"></td>
                                     <td th:text="${#temporals.format(feedback.submittedAt, 'dd/MM/yyyy HH:mm')}"></td>
-                                    <td th:text="${feedback.response} ?: 'Chưa phản hồi'"></td>
-                                    <td th:text="${feedback.respondedAt} ? ${#temporals.format(feedback.respondedAt, 'dd/MM/yyyy HH:mm')} : 'Chưa phản hồi'"></td>
+                                    <td th:text="${feedback.response != null ? feedback.response : 'Chưa phản hồi'}"></td>
+                                    <td th:text="${feedback.respondedAt != null ? #temporals.format(feedback.respondedAt, 'dd/MM/yyyy HH:mm') : 'Chưa phản hồi'}"></td>
                                     <td th:text="${feedback.status}"></td>
                                     <td>
                                         <div th:if="${feedback.response == null}">
