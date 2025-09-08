@@ -259,25 +259,24 @@
                         <a href="/admin/feedbacks" class="btn btn-primary btn-sm">Quay lại</a>
                     </div>
                     <div th:if="${feedback != null}" class="row">
-                        <!-- Feedback Details Section -->
                         <div class="col-12 feedback-details">
                             <h6 class="mb-3">Thông tin phản hồi</h6>
                             <table>
                                 <tr>
                                     <td>Tên</td>
-                                    <td th:text="${feedback.name} ?: 'Không xác định'"></td>
+                                    <td th:text="${feedback.user != null ? feedback.user.name : 'Không xác định'}"></td>
                                 </tr>
                                 <tr>
                                     <td>Email</td>
-                                    <td th:text="${feedback.email} ?: 'Không xác định'"></td>
+                                    <td th:text="${feedback.user != null ? feedback.user.email : 'Không xác định'}"></td>
                                 </tr>
                                 <tr>
                                     <td>Số điện thoại</td>
-                                    <td th:text="${feedback.phoneNumber} ?: 'Không xác định'"></td>
+                                    <td th:text="${feedback.user != null ? feedback.user.phoneNumber : 'Không xác định'}"></td>
                                 </tr>
                                 <tr>
                                     <td>Địa chỉ</td>
-                                    <td th:text="${feedback.address} ?: 'Không xác định'"></td>
+                                    <td th:text="${feedback.user != null ? feedback.user.address : 'Không xác định'}"></td>
                                 </tr>
                                 <tr>
                                     <td>Nội dung</td>
@@ -293,7 +292,7 @@
                                 </tr>
                                 <tr>
                                     <td>Trạng thái hiển thị</td>
-                                    <td th:text="${feedback.isVisible} != null ? (${feedback.isVisible} ? 'Hiển thị' : 'Ẩn') : 'Không xác định'"></td>
+                                    <td th:text="${feedback.isVisible != null ? (feedback.isVisible ? 'Hiển thị' : 'Ẩn') : 'Không xác định'}"></td>
                                 </tr>
                                 <tr>
                                     <td>Trạng thái</td>
@@ -309,12 +308,11 @@
                                 </tr>
                             </table>
                         </div>
-                        <!-- Response Section -->
                         <div class="col-12 response-section">
                             <h6 class="mb-3">Nhập hoặc chỉnh sửa phản hồi</h6>
                             <form th:action="@{/admin/feedbacks/respond}" method="post" id="response-form">
                                 <input type="hidden" name="feedbackId" th:value="${feedback.feedbackId}">
-                                <textarea name="response" rows="4" placeholder="Nhập phản hồi của bạn..." required th:value="${feedback.response} ?: ''"></textarea>
+                                <textarea name="response" rows="4" placeholder="Nhập phản hồi của bạn..." required th:value="${feedback.response != null ? feedback.response : ''}"></textarea>
                                 <div class="btn-group">
                                     <button type="submit" class="btn btn-primary">Lưu phản hồi</button>
                                     <a th:href="@{/admin/feedbacks}" class="btn btn-secondary">Hủy</a>

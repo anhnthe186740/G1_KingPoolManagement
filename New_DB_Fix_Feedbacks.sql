@@ -274,3 +274,8 @@ ALTER TABLE Feedback
 MODIFY COLUMN status ENUM('Pending', 'Read', 'Responded', 'Completed') DEFAULT 'Pending';
 
 -- use kingpooldb;
+
+-- Cập nhật phản hồi để đảm bảo user_id hợp lệ
+UPDATE Feedback SET user_id = 1 WHERE feedback_id = 1;
+UPDATE Feedback SET user_id = 2 WHERE feedback_id = 2;
+UPDATE Feedback SET user_id = 1 WHERE feedback_id = 3;
